@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<book name="source.xlsx">
+    <sheet name="Description" row = "0">
+        <field name="ProjectManager"  colum="0"></field>
+        <field name="Applicant"  colum="0"></field>
+        <field name="RequstNo"  colum="0"></field>
+        <field name="Voyage"  colum="0"></field>
+        <field name="StationNo"  colum="0"></field>
+        <field name="SampleName"  colum="0"></field>
+        <field name="SampleNo"  colum="0"></field>
+        <field name="Number"  colum="0"></field>
+        <field name="Amount"  colum="0"></field>
+        <field name="Depth"  colum="0"></field>
+        <field name="Length"  colum="0"></field>
+        <field name="Target"  colum="0"></field>
+        <field name="Comment"  colum="0"></field>
+    </sheet>
+    <sheet name="MajorElement" row = "0">
+        <field name="SampleNo"  colum="0"></field>
+        <field name="TestNo"  colum="0"></field>
+        <field name="EntrustInstitution"  colum="0"></field>
+        <field name="TestType"  colum="0"></field>
+        <field name="TestInstrument"  colum="0"></field>
+        <field name="Si"  colum="0"></field>
+        <field name="Ti"  colum="0"></field>
+        <field name="Al"  colum="0"></field>
+        <field name="Fe"  colum="0"></field>
+        <field name="FeO"  colum="0"></field>
+        <field name="FeT"  colum="0"></field>
+        <field name="Mn"  colum="0"></field>
+        <field name="Mg"  colum="0"></field>
+        <field name="Ca"  colum="0"></field>
+        <field name="Na"  colum="0"></field>
+        <field name="K"  colum="0"></field>
+        <field name="P"  colum="0"></field>
+        <field name="Au"  colum="0"></field>
+        <field name="Ag"  colum="0"></field>
+        <field name="LOI"  colum="0"></field>
+        <field name="C"  colum="0"></field>
+        <field name="H2O+"  colum="0"></field>
+        <field name="H2O-"  colum="0"></field>
+        <field name="OrganicCarbon"  colum="0"></field>
+        <field name="Total"  colum="0"></field>
+    </sheet>
+</book>

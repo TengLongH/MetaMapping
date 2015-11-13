@@ -1,45 +1,44 @@
-<?xml version="1.0" ?>
-<book name="source.xlsx">
-    <sheet name="Description" row = "0">
-        <field name="ProjectManager"  colum="0"></field>
-        <field name="Applicant"  colum="0"></field>
-        <field name="RequstNo"  colum="0"></field>
-        <field name="Voyage"  colum="0"></field>
-        <field name="StationNo"  colum="0"></field>
-        <field name="SampleName"  colum="0"></field>
-        <field name="SampleNo"  colum="0"></field>
-        <field name="Number"  colum="0"></field>
-        <field name="Amount"  colum="0"></field>
-        <field name="Depth"  colum="0"></field>
-        <field name="Length"  colum="0"></field>
-        <field name="Target"  colum="0"></field>
-        <field name="Comment"  colum="0"></field>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><book name="source">
+    <sheet name="Description" row="5">
+        <field colum="0" name="ProjectManager"/>
+        <field colum="1" mapping="= Temlplate&gt;Description&gt;Applicant" name="Applicant"/>
+        <field colum="2" mapping="= Temlplate&gt;Description&gt;RequstNo" name="RequstNo"/>
+        <field colum="3" mapping="= Temlplate&gt;Description&gt;Voyage" name="Voyage"/>
+        <field colum="4" mapping="= Temlplate&gt;Description&gt;StationNo" name="StationNo"/>
+        <field colum="5" mapping="=  Temlplate&gt;Description&gt;SampleType" name="SampleName"/>
+        <field colum="6" mapping="=  Temlplate&gt;Description&gt;SampleNo" name="SampleNo"/>
+        <field colum="7" mapping="=  Temlplate&gt;Description&gt;Count" name="Number"/>
+        <field colum="8" mapping="=  Temlplate&gt;Description&gt;Amount" name="Amount"/>
+        <field colum="9" mapping="=  Temlplate&gt;Description&gt;Depth" name="Depth"/>
+        <field colum="10" mapping="=  Temlplate&gt;Description&gt;Length" name="Length"/>
+        <field colum="11" mapping="=  Temlplate&gt;Description&gt;Target" name="Target"/>
+        <field colum="12" name="Comment"/>
     </sheet>
-    <sheet name="MajorElement" row = "0">
-        <field name="SampleNo"  colum="0"></field>
-        <field name="TestNo"  colum="0"></field>
-        <field name="EntrustInstitution"  colum="0"></field>
-        <field name="TestType"  colum="0"></field>
-        <field name="TestInstrument"  colum="0"></field>
-        <field name="Si"  colum="0"></field>
-        <field name="Ti"  colum="0"></field>
-        <field name="Al"  colum="0"></field>
-        <field name="Fe"  colum="0"></field>
-        <field name="FeO"  colum="0"></field>
-        <field name="FeT"  colum="0"></field>
-        <field name="Mn"  colum="0"></field>
-        <field name="Mg"  colum="0"></field>
-        <field name="Ca"  colum="0"></field>
-        <field name="Na"  colum="0"></field>
-        <field name="K"  colum="0"></field>
-        <field name="P"  colum="0"></field>
-        <field name="Au"  colum="0"></field>
-        <field name="Ag"  colum="0"></field>
-        <field name="LOI"  colum="0"></field>
-        <field name="C"  colum="0"></field>
-        <field name="H2O+"  colum="0"></field>
-        <field name="H2O-"  colum="0"></field>
-        <field name="OrganicCarbon"  colum="0"></field>
-        <field name="Total"  colum="0"></field>
+    <sheet name="MajorElement" row="6">
+        <field colum="1" mapping="=  Temlplate&gt;MajorElement&gt;SampleNo" name="SampleNo"/>
+        <field colum="2" mapping="=  Temlplate&gt;MajorElement&gt;TestNo" name="TestNo"/>
+        <field colum="3" mapping="=  Temlplate&gt;MajorElement&gt;TestInstitution" name="EntrustInstitution"/>
+        <field colum="4" mapping="=  Temlplate&gt;MajorElement&gt;TestMethod" name="TestType"/>
+        <field colum="5" mapping="=  Temlplate&gt;MajorElement&gt;TestInstrument" name="TestInstrument"/>
+        <field colum="6" mapping="=  Temlplate&gt;MajorElement&gt;SiO2" name="Si"/>
+        <field colum="7" mapping="=  Temlplate&gt;MajorElement&gt;TiO2" name="Ti"/>
+        <field colum="8" mapping="=  Temlplate&gt;MajorElement&gt;Al2O3" name="Al"/>
+        <field colum="9" name="Fe"/>
+        <field colum="10" name="FeO"/>
+        <field colum="11" name="FeT"/>
+        <field colum="12" name="Mn"/>
+        <field colum="13" name="Mg"/>
+        <field colum="14" name="Ca"/>
+        <field colum="15" name="Na"/>
+        <field colum="16" name="K"/>
+        <field colum="17" name="P"/>
+        <field colum="18" name="Au"/>
+        <field colum="19" name="Ag"/>
+        <field colum="20" name="LOI"/>
+        <field colum="21" name="C"/>
+        <field colum="22" name="H2O+"/>
+        <field colum="23" name="H2O-"/>
+        <field colum="24" name="OrganicCarbon"/>
+        <field colum="25" name="Total"/>
     </sheet>
-</book>
+<sheet name="MicroElement" row="4"><field colum="5" name="SampleType"/></sheet></book>

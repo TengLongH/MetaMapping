@@ -9,6 +9,10 @@ public class MyTreeNode extends DefaultMutableTreeNode{
 
 	private static final long serialVersionUID = 1L;
 
+	private boolean mappedNode;
+	private boolean matched;
+	
+	
 	public MyTreeNode(Object userObject) {
         super(userObject, true);
     }
@@ -34,4 +38,20 @@ public class MyTreeNode extends DefaultMutableTreeNode{
 		}
 		return buf.toString();
 	}
+
+	public boolean isMappedNode() {
+		return mappedNode;
+	}
+
+	public void setMappedNode(boolean mappedNode) {
+		this.mappedNode = mappedNode;
+	}
+	public boolean isMatched() {
+		return matched;
+	}
+
+	public void setMatched(boolean matched) {
+		this.matched = matched;
+	}
+
 }

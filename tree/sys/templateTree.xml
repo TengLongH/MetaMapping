@@ -1,18 +1,17 @@
 <?xml version="1.0" ?>
-<book name="Temlplate.xlsx">
-    <sheet name="Description" row="0">
+<book name="Temlplate">
+    <sheet id="description" name="Description" row="0">
         <field name="Applicant"  colum="0"></field>
-        <field name="RequstNo"  colum="0"></field>
-        <field name="Voyage"  colum="0"></field>
-        <field name="StationNo"  colum="0"></field>
-        <field name="SampleType"  colum="0"></field>
-        <field name="SampleNo"  colum="0"></field>
+        <field id="requestNo" name="RequstNo"  colum="0"></field>
+        <field id="voyage" name="Voyage"  colum="0"></field>
+        <field id="stationNo" name="StationNo"  colum="0"></field>
+        <field id="sampleType" name="SampleType"  colum="0"></field>
+        <field id="sampleNo" name="SampleNo"  colum="0"></field>
         <field name="Count"  colum="0"></field>
         <field name="Amount"  colum="0"></field>
         <field name="Depth"  colum="0"></field>
         <field name="Length"  colum="0"></field>
         <field name="Target"  colum="0"></field>
-        <field name="Comment"  colum="0"></field>
     </sheet>
     <sheet name="MajorElement" row="0">
         <field name="SampleNo"  colum="0"></field>
@@ -176,5 +175,8 @@
         <field name="TestInstitution"  colum="0"></field>
         <field name="TestMethod"  colum="0"></field>
         <field name="TestInstrument"  colum="0"></field>
+    </sheet>
+    <sheet name="ExtraSheet" row="0">
+        <field name="ExtraColumn"  colum="0"></field>
     </sheet>
 </book>

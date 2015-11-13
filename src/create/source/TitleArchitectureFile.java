@@ -34,7 +34,9 @@ import org.w3c.dom.NodeList;
 
 import common.IntegerEditor;
 import common.MyDefaultTableModel;
+import common.MyTreeCellRender;
 import common.MyTreeNode;
+import descript.FileList;
 
 public class TitleArchitectureFile extends JFrame {
 
@@ -59,15 +61,18 @@ public class TitleArchitectureFile extends JFrame {
 	private JButton saveButton;
 
 	private JFrame frame ;
-	public TitleArchitectureFile() {
-		this("tree/blankSourceTree.xml");
+	private FileList fileList;
+	public TitleArchitectureFile(FileList fileList) {
+		this("tree/sys/blankSourceTree.xml", fileList );
 	}
 
-	public TitleArchitectureFile(String sourceName) {
+	public TitleArchitectureFile(String sourceName, FileList fileList ) {
 		super("Analysis Source Title");
 		this.frame = this;
+		this.fileList = fileList;
 		
-		setLayout(new GridBagLayout());
+		//setLayout(new GridBagLayout());
+		setLayout( new GridLayout( 1, 2 ) );
 		this.sourceFile = new File(sourceName);
 		System.out.println(sourceFile.exists());
 		
@@ -79,10 +84,14 @@ public class TitleArchitectureFile extends JFrame {
 			return;
 		}
 
+		MyTreeCellRender render = new MyTreeCellRender();
+		tree.setCellRenderer(render);
 		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		tree.addMouseListener(new JTreeListener());
-		add(new JScrollPane(tree), new GridBagConstraints(0, 0, 4, 1, 0.8, 1, GridBagConstraints.CENTER,
-				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+		
+		add( new JScrollPane(tree) );
+		//add(new JScrollPane(tree), new GridBagConstraints(0, 0, 1, 1, 1, 1, GridBagConstraints.CENTER,
+		//		GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 
 		JPanel leftPanel = new JPanel();
 		leftPanel.setLayout(new GridBagLayout());
@@ -92,22 +101,22 @@ public class TitleArchitectureFile extends JFrame {
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		addButton = new JButton("Add");
 		leftPanel.add(addButton, new GridBagConstraints(0, 1, 1, 1, 1, 0, GridBagConstraints.CENTER,
-				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+				GridBagConstraints.HORIZONTAL, new Insets(5, 0, 0, 0), 0, 0));
 
 		JPanel addPanel = new JPanel();
 		addPanel.setLayout(new GridLayout(1, 3));
 		sheetButton = new JButton("Sheet");
 		sheetButton.addActionListener(buttonListener);
-		mergButton = new JButton("Merg");
+		mergButton = new JButton("Columns");
 		mergButton.addActionListener(buttonListener);
-		fieldButton = new JButton("Field");
+		fieldButton = new JButton("Column");
 		fieldButton.addActionListener(buttonListener);
 		addPanel.add(sheetButton);
 		addPanel.add(mergButton);
 		addPanel.add(fieldButton);
 
 		leftPanel.add(addPanel, new GridBagConstraints(0, 2, 1, 1, 1, 0, GridBagConstraints.CENTER,
-				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 5, 0), 0, 0));
 		JButton editButton = new JButton("Edit");
 		leftPanel.add(editButton, new GridBagConstraints(0, 3, 1, 1, 1, 0, GridBagConstraints.CENTER,
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
@@ -133,10 +142,11 @@ public class TitleArchitectureFile extends JFrame {
 		leftPanel.add(saveButton, new GridBagConstraints(0, 5, 1, 1, 0, 0, GridBagConstraints.SOUTHEAST,
 				GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
-		add(leftPanel, new GridBagConstraints(5, 0, 1, 1, 0.2, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-				new Insets(0, 0, 0, 0), 0, 0));
+		add( leftPanel );
+		//add(leftPanel, new GridBagConstraints(1, 0, 1, 1, 0, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+		//		new Insets(0, 0, 0, 0), 0, 0));
 
-		setSize(new Dimension(1024, 400));
+		setSize(new Dimension(650, 700));
 		setVisible(true);
 		setLocationRelativeTo(null);
 		
@@ -169,6 +179,7 @@ public class TitleArchitectureFile extends JFrame {
 		return true;
 	}
 
+	
 	private boolean removeEmptyElement(Element parent) {
 		int countElement = 0;
 		NodeList list = parent.getChildNodes();
@@ -257,8 +268,9 @@ public class TitleArchitectureFile extends JFrame {
 		}
 		ignorTableValueChange = false;
 	}
+	
 	public static void main(String[] args) {
-		new TitleArchitectureFile();
+		new TitleArchitectureFile(null);
 	}
 
 	class JTreeListener implements MouseListener {
@@ -338,10 +350,10 @@ public class TitleArchitectureFile extends JFrame {
 			case "Sheet":
 				addElement("sheet");
 				break;
-			case "Merg":
+			case "Columns":
 				addElement("merg");
 				break;
-			case "Field":
+			case "Column":
 				addElement("field");
 				break;
 			case "Save":
@@ -351,7 +363,11 @@ public class TitleArchitectureFile extends JFrame {
 				Node docNode = (Node) treeRoot.getUserObject();
 				if (!format(docNode.getOwnerDocument()))
 					break;
-				utils.Utils.saveXML(docNode.getOwnerDocument());
+				File file = utils.Utils.saveXML(docNode.getOwnerDocument());
+				if( null != fileList ){
+					fileList.updateList();
+				}
+				new AttributeMappingFile(file, fileList);
 				frame.dispose();
 				break;
 			default:
