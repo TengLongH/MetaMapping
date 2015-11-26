@@ -1,4 +1,4 @@
-package create.source;
+package source;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -10,6 +10,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Vector;
 
 import javax.swing.AbstractButton;
@@ -27,16 +29,16 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.apache.poi.ss.util.CellReference;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import common.IntegerEditor;
+import common.XMLList;
 import common.MyDefaultTableModel;
 import common.MyTreeCellRender;
 import common.MyTreeNode;
-import descript.FileList;
 
 public class TitleArchitectureFile extends JFrame {
 
@@ -61,16 +63,14 @@ public class TitleArchitectureFile extends JFrame {
 	private JButton saveButton;
 
 	private JFrame frame ;
-	private FileList fileList;
-	public TitleArchitectureFile(FileList fileList) {
+	public TitleArchitectureFile(XMLList fileList) {
 		this("tree/sys/blankSourceTree.xml", fileList );
 	}
 
-	public TitleArchitectureFile(String sourceName, FileList fileList ) {
-		super("Analysis Source Title");
+	public TitleArchitectureFile(String sourceName, XMLList fileList ) {
+		super("Analysis Title");
 		this.frame = this;
-		this.fileList = fileList;
-		
+		setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		//setLayout(new GridBagLayout());
 		setLayout( new GridLayout( 1, 2 ) );
 		this.sourceFile = new File(sourceName);
@@ -133,7 +133,6 @@ public class TitleArchitectureFile extends JFrame {
 		}
 		editTable = new JTable(new MyDefaultTableModel(data, columNames));
 		editTable.getModel().addTableModelListener(new TableListener());
-		editTable.setDefaultEditor(Integer.class, new IntegerEditor(0, 100));
 		leftPanel.add(new JScrollPane(editTable), new GridBagConstraints(0, 4, 1, 1, 1, 1, GridBagConstraints.CENTER,
 				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 
@@ -170,6 +169,10 @@ public class TitleArchitectureFile extends JFrame {
 		}
 		docNode.appendChild(docChild);
 		leaf.add(new MyTreeNode(docChild));
+		ArrayList<Object> o = new ArrayList<Object>();
+		o.addAll( Arrays.asList(curPath.getPath()));
+		o.add(leaf);
+		tree.makeVisible( new TreePath( o.toArray() ) );
 		tree.updateUI();
 	}
 
@@ -308,13 +311,14 @@ public class TitleArchitectureFile extends JFrame {
 			String attr = model.getValueAt(e.getFirstRow(), e.getColumn() - 1).toString();
 			System.out.println(attr);
 			String changedValue = model.getValueAt(e.getFirstRow(), e.getColumn()).toString();
+			changedValue = changedValue.trim();
 			if (attr.equals("row") || attr.equals("colum")) {
-				try {
-					System.out.println(Integer.parseInt(changedValue));
-				} catch (Exception ex) {
+			
+				try{
+					Integer.parseInt(changedValue);
+				}catch(Exception ex ){
 					JOptionPane.showMessageDialog(null, "Integer value");
-					changedValue = "0";
-					model.setValueAt(changedValue, e.getFirstRow(), e.getColumn());
+					model.setValueAt("0", e.getFirstRow(), e.getColumn());
 				}
 			}
 			DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) curPath.getLastPathComponent();
@@ -364,10 +368,7 @@ public class TitleArchitectureFile extends JFrame {
 				if (!format(docNode.getOwnerDocument()))
 					break;
 				File file = utils.Utils.saveXML(docNode.getOwnerDocument());
-				if( null != fileList ){
-					fileList.updateList();
-				}
-				new AttributeMappingFile(file, fileList);
+				new AttributeMappingFile(file);
 				frame.dispose();
 				break;
 			default:

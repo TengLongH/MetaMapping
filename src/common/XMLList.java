@@ -1,4 +1,4 @@
-package descript;
+package common;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -27,11 +27,12 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.filechooser.FileFilter;
 
-import create.source.TitleArchitectureFile;
 import javafx.scene.layout.Border;
 import main.Main;
+import source.TitleArchitectureFile;
 
-public class FileList extends JFrame implements ActionListener, WindowListener{
+public class XMLList extends JFrame 
+implements ActionListener, WindowListener, Watcher{
 
 	private static final long serialVersionUID = 1L;
 
@@ -46,11 +47,9 @@ public class FileList extends JFrame implements ActionListener, WindowListener{
 	
 	private JFileChooser xmlChooser ;
 	
-	private Main main;
-	public FileList(Main main){
+	public XMLList(Main main){
 		
-		this.main = main;
-		
+		setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		updateList();
 		add( new JScrollPane( list )  );
 		
@@ -59,15 +58,15 @@ public class FileList extends JFrame implements ActionListener, WindowListener{
 		lay.setAlignment(FlowLayout.RIGHT);
 		bar.setLayout(lay);
 		bar.setMargin(new Insets(0, 10, 0, 0));
-		editButton = new JButton("Edit");
-		editButton.addActionListener(this);
-		bar.add(editButton);
-		importButton = new JButton("Import");
-		importButton.addActionListener(this);
-		bar.add(importButton);
 		createButton = new JButton("Create");
 		createButton.addActionListener(this);
 		bar.add(createButton);
+		importButton = new JButton("Import");
+		importButton.addActionListener(this);
+		bar.add(importButton);
+		editButton = new JButton("Edit");
+		editButton.addActionListener(this);
+		bar.add(editButton);
 		removeButton = new JButton("Remove");
 		removeButton.addActionListener(this);
 		bar.add(removeButton);
@@ -112,7 +111,7 @@ public class FileList extends JFrame implements ActionListener, WindowListener{
 	}
 	public static void main(String[] args) {
 
-		new FileList(null);
+		new XMLList(null);
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -198,13 +197,6 @@ public class FileList extends JFrame implements ActionListener, WindowListener{
 		}
 		return null;
 	}
-	
-	@Override
-	public void dispose(){
-		super.dispose();
-		this.main.updateXMLBox();
-	}
-	
 	@Override
 	public void windowOpened(WindowEvent e) {}
 	@Override
@@ -221,4 +213,9 @@ public class FileList extends JFrame implements ActionListener, WindowListener{
 	public void windowActivated(WindowEvent e) {}
 	@Override
 	public void windowDeactivated(WindowEvent e) {}
+	@Override
+	public void listChange() {
+		System.out.println("XML: file list changes");
+		updateList();
+	}
 }

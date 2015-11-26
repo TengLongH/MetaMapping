@@ -1,112 +1,120 @@
 <?xml version="1.0" ?>
 <book name="Temlplate">
-    <sheet id="description" name="Description" row="0">
-        <field name="Applicant"  colum="0"></field>
+	<sheet name="ExtraSheet" row="0">
+        <field name="ExtraColumn"  colum="0"></field>
+    </sheet>
+    <sheet id="description" name="Description" row="4">
         <field id="requestNo" name="RequstNo"  colum="0"></field>
-        <field id="voyage" name="Voyage"  colum="0"></field>
-        <field id="stationNo" name="StationNo"  colum="0"></field>
-        <field id="sampleType" name="SampleType"  colum="0"></field>
-        <field id="sampleNo" name="SampleNo"  colum="0"></field>
-        <field name="Count"  colum="0"></field>
-        <field name="Amount"  colum="0"></field>
-        <field name="Depth"  colum="0"></field>
-        <field name="Length"  colum="0"></field>
-        <field name="Target"  colum="0"></field>
+	<field name="Applicant"  colum="1"></field>
+        <field id="voyage" name="Voyage"  colum="2"></field>
+        <field id="stationNo" name="StationNo"  colum="3"></field>
+        <field id="sampleType" name="SampleType"  colum="4"></field>
+        <field id="sampleNo" name="SampleNo"  colum="5"></field>
+        <field name="Count"  colum="6"></field>
+        <field name="Amount"  colum="7"></field>
+        <field name="Depth"  colum="8"></field>
+        <field name="Length"  colum="9"></field>
+        <field name="Target"  colum="10"></field>
+        <field name="User" colum="11"></field>
     </sheet>
-    <sheet name="MajorElement" row="0">
-        <field name="SampleNo"  colum="0"></field>
-        <field name="TestNo"  colum="0"></field>
-        <field name="TestInstitution"  colum="0"></field>
-        <field name="TestMethod"  colum="0"></field>
-        <field name="TestInstrument"  colum="0"></field>
-        <field name="SiO2"  colum="0"></field>
-        <field name="TiO2"  colum="0"></field>
-        <field name="Al2O3"  colum="0"></field>
-        <field name="Fe2O3"  colum="0"></field>
-        <field name="FeO"  colum="0"></field>
-        <field name="FeT"  colum="0"></field>
-        <field name="MnO"  colum="0"></field>
-        <field name="MgO"  colum="0"></field>
-        <field name="CaO"  colum="0"></field>
-        <field name="Na2O"  colum="0"></field>
-        <field name="K2O"  colum="0"></field>
-        <field name="P2O5"  colum="0"></field>
-        <field name="LOI"  colum="0"></field>
-        <field name="CO2"  colum="0"></field>
-        <field name="H2O+"  colum="0"></field>
-        <field name="H2O-"  colum="0"></field>
-        <field name="OrganicCarbon"  colum="0"></field>
-        <field name="Total"  colum="0"></field>
+    <sheet name="MajorElement" row="5">
+        <field name="SampleNo"  id="MajorElement-sampleNo" colum="0"></field>
+        <field name="TestNo"  colum="1"></field>
+        <field name="TestInstitution"  colum="2"></field>
+        <field name="SampleTestNo"  colum="3"></field>
+        <field name="TestItems"  colum="6"></field>
+        <field name="TestInstrument"  colum="7"></field>
+        <field name="DetermineType" colum="8"></field>
+        <field name="SiO2"  colum="10"></field>
+        <field name="TiO2"  colum="11"></field>
+        <field name="Al2O3"  colum="12"></field>
+        <field name="Fe2O3"  colum="13"></field>
+        <field name="FeO"  colum="14"></field>
+        <field name="FeT"  colum="15"></field>
+        <field name="MnO"  colum="16"></field>
+        <field name="MgO"  colum="17"></field>
+        <field name="CaO"  colum="18"></field>
+        <field name="Na2O"  colum="19"></field>
+        <field name="K2O"  colum="20"></field>
+        <field name="P2O5"  colum="21"></field>
+        <field name="LOI"  colum="22"></field>
+        <field name="CO2"  colum="23"></field>
+        <field name="H2O+"  colum="24"></field>
+        <field name="H2O-"  colum="25"></field>
+        <field name="OrganicCarbon"  colum="26"></field>
+        <field name="Total"  colum="27"></field>
     </sheet>
-    <sheet name="MicroElement" row="0">
-        <field name="SampleNo"  colum="0"></field>
-        <field name="TestNo"  colum="0"></field>
-        <field name="TestInstitution"  colum="0"></field>
-        <field name="TestMethod"  colum="0"></field>
-        <field name="TestInstrument"  colum="0"></field>
-        <field name="Li"  colum="0"></field>
-        <field name="Be"  colum="0"></field>
-        <field name="Sc"  colum="0"></field>
-        <field name="V"  colum="0"></field>
-        <field name="Cr"  colum="0"></field>
-        <field name="Co"  colum="0"></field>
-        <field name="Ni"  colum="0"></field>
-        <field name="Cu"  colum="0"></field>
-        <field name="Zn"  colum="0"></field>
-        <field name="Ga"  colum="0"></field>
-        <field name="Ge"  colum="0"></field>
-        <field name="Se"  colum="0"></field>
-        <field name="Rb"  colum="0"></field>
-        <field name="Sr"  colum="0"></field>
-        <field name="Y"  colum="0"></field>
-        <field name="Zr"  colum="0"></field>
-        <field name="Nb"  colum="0"></field>
-        <field name="Mo"  colum="0"></field>
-        <field name="Cd"  colum="0"></field>
-        <field name="In"  colum="0"></field>
-        <field name="Cs"  colum="0"></field>
-        <field name="Ba"  colum="0"></field>
-        <field name="Hf"  colum="0"></field>
-        <field name="Ta"  colum="0"></field>
-        <field name="W"  colum="0"></field>
-        <field name="Tl"  colum="0"></field>
-        <field name="Pb"  colum="0"></field>
-        <field name="Bi"  colum="0"></field>
-        <field name="Th"  colum="0"></field>
-        <field name="U"  colum="0"></field>
+    <sheet name="MicroElement" row="5">
+        <field name="SampleNo" id="MicroElement-sampleNo" colum="0"></field>
+        <field name="TestNo"  colum="1"></field>
+        <field name="TestInstitution"  colum="2"></field>
+        <field name="sampleTestNo"  colum="3"></field>
+        <field name="TestItems"  colum="6"></field>
+        <field name="TestInstrument"  colum="7"></field>
+        <field name="DetermineType" colum="8"></field>
+        <field name="Sc"  colum="9"></field>
+        <field name="V"  colum="10"></field>
+        <field name="Cr"  colum="11"></field>
+        <field name="Co"  colum="12"></field>
+        <field name="Ni"  colum="13"></field>
+        <field name="Cu"  colum="14"></field>
+        <field name="Zn"  colum="15"></field>
+        <field name="Ga"  colum="16"></field>
+        <field name="Ge"  colum="17"></field>
+        <field name="Se"  colum="18"></field>
+        <field name="Rb"  colum="19"></field>
+        <field name="Sr"  colum="20"></field>
+        <field name="Y"  colum="21"></field>
+        <field name="Zr"  colum="22"></field>
+        <field name="Nb"  colum="23"></field>
+        <field name="Mo"  colum="24"></field>
+        <field name="Cd"  colum="25"></field>
+        <field name="In"  colum="26"></field>
+        <field name="Cs"  colum="27"></field>
+        <field name="Ba"  colum="28"></field>
+        <field name="Hf"  colum="29"></field>
+        <field name="Ta"  colum="30"></field>
+        <field name="W"  colum="31"></field>
+        <field name="Tl"  colum="32"></field>
+        <field name="Pb"  colum="33"></field>
+        <field name="Bi"  colum="34"></field>
+        <field name="Th"  colum="35"></field>
+        <field name="U"  colum="36"></field>
     </sheet>
-    <sheet name="RareEarthElement" row="0">
-        <field name="SampleNo"  colum="0"></field>
-        <field name="TestNo"  colum="0"></field>
-        <field name="TestInstitution"  colum="0"></field>
-        <field name="TestMethod"  colum="0"></field>
-        <field name="TestInstrument"  colum="0"></field>
-        <field name="La"  colum="0"></field>
-        <field name="Ce"  colum="0"></field>
-        <field name="Pr"  colum="0"></field>
-        <field name="Nd"  colum="0"></field>
-        <field name="Sm"  colum="0"></field>
-        <field name="Eu"  colum="0"></field>
-        <field name="Gd"  colum="0"></field>
-        <field name="Tb"  colum="0"></field>
-        <field name="Dy"  colum="0"></field>
-        <field name="Ho"  colum="0"></field>
-        <field name="Er"  colum="0"></field>
-        <field name="Tm"  colum="0"></field>
-        <field name="Yb"  colum="0"></field>
-        <field name="Lu"  colum="0"></field>
+    <sheet name="RareEarthElement" row="4">
+        <field name="SampleNo"  id="RareEarthElement-sampleNo" colum="0"></field>
+        <field name="TestNo"  colum="1"></field>
+        <field name="TestInstitution"  colum="2"></field>
+        <field name="sampleTestNo"  colum="3"></field>
+        <field name="TestItems"  colum="6"></field>
+        <field name="TestInstrument"  colum="7"></field>
+        <field name="DetermineType" colum="8"></field>
+        <field name="Pr"  colum="9"></field>
+        <field name="Nd"  colum="10"></field>
+        <field name="Sm"  colum="11"></field>
+        <field name="Eu"  colum="12"></field>
+        <field name="Gd"  colum="13"></field>
+        <field name="Tb"  colum="14"></field>
+        <field name="Dy"  colum="15"></field>
+        <field name="Ho"  colum="16"></field>
+        <field name="Er"  colum="17"></field>
+        <field name="Tm"  colum="18"></field>
+        <field name="Yb"  colum="19"></field>
+        <field name="Lu"  colum="20"></field>
     </sheet>
-    <sheet name="PreciousMetals" row="0">
-        <field name="SampleNo"  colum="0"></field>
-        <field name="TestNo"  colum="0"></field>
-        <field name="TestInstitution"  colum="0"></field>
-        <field name="TestMethod"  colum="0"></field>
-        <field name="TestInstrument"  colum="0"></field>
-        <field name="Au"  colum="0"></field>
-        <field name="Ag"  colum="0"></field>
+    <sheet name="PreciousMetals" row="4">
+        <field name="SampleNo"  id="PreciousMetals-sampleNo"  colum="0"></field>
+        <field name="TestNo"  colum="1"></field>
+        <field name="TestInstitution"  colum="2"></field>
+         <field name="sampleTestNo"  colum="3"></field>
+        <field name="TestMethod"  colum="6"></field>
+        <field name="TestInstrument"  colum="7"></field>
+         <field name="DetermineType" colum="8"></field>
+        <field name="Au"  colum="10"></field>
+        <field name="Ag"  colum="11"></field>
     </sheet>
     <sheet name="PGE" row="0">
-        <field name="SampleNo"  colum="0"></field>
+        <field name="SampleNo" id="PGE-sampleNo" colum="0"></field>
         <field name="TestNo"  colum="0"></field>
         <field name="TestInstitution"  colum="0"></field>
         <field name="TestMethod"  colum="0"></field>
@@ -119,7 +127,7 @@
         <field name="Pt"  colum="0"></field>
     </sheet>
     <sheet name="GranularityAnalysis" row="0">
-        <field name="SampleNo"  colum="0"></field>
+        <field name="SampleNo" id="GranularityAnalysis-sampleNo" colum="0"></field>
         <field name="TestNo"  colum="0"></field>
         <field name="TestInstitution"  colum="0"></field>
         <field name="TestMethod"  colum="0"></field>
@@ -128,55 +136,53 @@
         <field name="Silt"  colum="0"></field>
     </sheet>
     <sheet name="IsotopicAnalysis" row="0">
-        <field name="SampleNo"  colum="0"></field>
+        <field name="SampleNo"  id="IsotopicAnalysis-sampleNo" colum="0"></field>
         <field name="TestNo"  colum="0"></field>
         <field name="TestInstitution"  colum="0"></field>
         <field name="TestMethod"  colum="0"></field>
         <field name="TestInstrument"  colum="0"></field>
     </sheet>
     <sheet name="AppliedMechanic" row="0">
-        <field name="SampleNo"  colum="0"></field>
+        <field name="SampleNo" id="AppliedMechanic-sampleNo" colum="0"></field>
         <field name="TestNo"  colum="0"></field>
         <field name="TestInstitution"  colum="0"></field>
         <field name="TestMethod"  colum="0"></field>
         <field name="TestInstrument"  colum="0"></field>
     </sheet>
     <sheet name="EngineeringPhysics" row="0">
-        <field name="SampleNo"  colum="0"></field>
+        <field name="SampleNo" id="EngineeringPhysics-sampleNo" colum="0"></field>
         <field name="TestNo"  colum="0"></field>
         <field name="TestInstitution"  colum="0"></field>
         <field name="TestMethod"  colum="0"></field>
         <field name="TestInstrument"  colum="0"></field>
     </sheet>
     <sheet name="ClayMineralAnalysis" row="0">
-        <field name="SampleNo"  colum="0"></field>
+        <field name="SampleNo" id="ClayMineralAnalysis-sampleNo" colum="0"></field>
         <field name="TestNo"  colum="0"></field>
         <field name="TestInstitution"  colum="0"></field>
         <field name="TestMethod"  colum="0"></field>
         <field name="TestInstrument"  colum="0"></field>
     </sheet>
     <sheet name="XRD" row="0">
-        <field name="SampleNo"  colum="0"></field>
+        <field name="SampleNo" id="XRD-sampleNo" colum="0"></field>
         <field name="TestNo"  colum="0"></field>
         <field name="TestInstitution"  colum="0"></field>
         <field name="TestMethod"  colum="0"></field>
         <field name="TestInstrument"  colum="0"></field>
     </sheet>
     <sheet name="Specimen" row="0">
-        <field name="SampleNo"  colum="0"></field>
+        <field name="SampleNo" id="Specimen-sampleNo" colum="0"></field>
         <field name="TestNo"  colum="0"></field>
         <field name="TestInstitution"  colum="0"></field>
         <field name="TestMethod"  colum="0"></field>
         <field name="TestInstrument"  colum="0"></field>
     </sheet>
     <sheet name="LightFlakes" row="0">
-        <field name="SampleNo"  colum="0"></field>
+        <field name="SampleNo" id="LightFlakes-sampleNo" colum="0"></field>
         <field name="TestNo"  colum="0"></field>
         <field name="TestInstitution"  colum="0"></field>
         <field name="TestMethod"  colum="0"></field>
         <field name="TestInstrument"  colum="0"></field>
     </sheet>
-    <sheet name="ExtraSheet" row="0">
-        <field name="ExtraColumn"  colum="0"></field>
-    </sheet>
+    
 </book>

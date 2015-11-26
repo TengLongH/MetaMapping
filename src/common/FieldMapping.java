@@ -1,51 +1,55 @@
 package common;
 
-import java.io.Serializable;
-
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import org.w3c.dom.Element;
 
-public class FieldMapping implements Serializable{
+import utils.Utils;
 
-	private DefaultMutableTreeNode key;
-	private DefaultMutableTreeNode value;
+public class FieldMapping{
+
+	private MyTreeNode key;
+	private MyTreeNode value;
 	private String relation;
-	public FieldMapping() {
-		super();
-	}
-	public FieldMapping( DefaultMutableTreeNode key, String realation, DefaultMutableTreeNode value) {
-		super();
+
+	public FieldMapping( MyTreeNode key, String relation, MyTreeNode value) {
 		this.key = key;
 		this.value = value;
-		this.relation = realation;
+		this.relation = relation;
 	}
 	
-	public String userObjectToString( Element e ){
-		String msg = e.getAttribute("name");
-		/*
-		if( e.getNodeName().trim().equals("field")){
-			msg += String.format("(column:%s)", e.getAttribute("colum") );
-		}
-		*/
-		return msg ;
+	public String getRelation(){
+		return this.relation;
 	}
-	public String toString(){
-		
+	public String keyString(){
+		Element element = (Element) key.getUserObject();
+		return Utils.elementPathToString(element);
+	}
+	public String valueString(){
+		Element element = (Element) value.getUserObject();
+		return Utils.elementPathToString(element);
+	}
+	
+	public String mapString(){
 		StringBuffer buf = new StringBuffer();
-		Object[] keyInfos = key.getUserObjectPath(); 
-		Object[] valueInfos = value.getUserObjectPath(); 
-		for( int i = 0; i < keyInfos.length; i++ ){
-			if( i > 0 )buf.append('>');
-			buf.append( userObjectToString( (Element) keyInfos[i] ));
-		}
-		buf.append("  ");
 		buf.append( this.relation );
 		buf.append("  ");
-		for( int i = 0; i < valueInfos.length; i++ ){
-			if( i > 0 )buf.append('>');
-			buf.append( userObjectToString( (Element) valueInfos[i] ));
-		}
+		buf.append(valueString());
 		return buf.toString();
 	}
+	public String toString(){
+		StringBuffer buf = new StringBuffer();
+		buf.append(keyString());
+		buf.append("  ");
+		buf.append( mapString() );
+		return buf.toString();
+	}
+
+	public MyTreeNode getKey() {
+		return key;
+	}
+
+	public MyTreeNode getValue() {
+		return value;
+	}
+	
+	
 }

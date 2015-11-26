@@ -26,6 +26,50 @@ import common.MyTreeNode;
 
 public class Utils {
 
+	public static void main(String[] args ){
+		try{
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			Document doc = builder.parse(new File("tree/sys/templateTree.xml"));
+			Element book = doc.getDocumentElement();
+			//Element e = getChildElementByName(book, "SampleNo");
+			Element e = getChildElementByName(book, "MicroElement");
+			Element s = getElementByPath(e, new String[]{"SampleNo"});
+			System.out.println(s);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+	public static String getAttribute( Element root, Object[] path, String attri ){
+		Element element = getElementByPath(root, path);
+		if( null != element ){
+			return element.getAttribute(attri);
+		}
+		return null;
+	}
+	public static Element getElementByPath( Element parent, Object[] path ){
+		Element e = null;
+		for( int i = 0; i < path.length; i++ ){
+			String name = path[i].toString();
+			e = getChildElementByName(parent, name);
+			parent = e;
+		}
+		return e;
+	}
+	public static Element getChildElementByName( Element parent, String name){
+		NodeList childs = parent.getChildNodes();
+		for( int i = 0; i < childs.getLength(); i++ ){
+			Node node = childs.item(i);
+			if( node.getNodeType() == Node.ELEMENT_NODE ){
+				Element element = (Element) node;
+				String value = element.getAttribute("name").trim();
+				if( value.equals(name) )return element;
+			}
+		}
+		return null;
+	}
+	
 	public static File saveXML(Document doc ) {
 		File file = null;
 		int value = 0;

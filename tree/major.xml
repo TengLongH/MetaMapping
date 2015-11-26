@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><book name="major">
+	<sheet name="Sheet1" row="1">
+		<field colum="0" mapping="=  Temlplate&gt;Description&gt;StationNo" name="stattion"/>
+		<field colum="1" mapping="=  Temlplate&gt;Description&gt;SampleType" name="type"/>
+		<field colum="2" mapping="=  Temlplate&gt;MajorElement&gt;SiO2" name="SiO2"/>
+		<field colum="3" mapping="=  Temlplate&gt;MicroElement&gt;Co" name="Al2O3"/>
+		<field colum="4" mapping="=  Temlplate&gt;MajorElement&gt;Fe2O3" name="Fe2O3"/>
+		<field colum="5" mapping="=  Temlplate&gt;MicroElement&gt;Cr" name="FeO"/>
+		<field colum="6" mapping="=  Temlplate&gt;MajorElement&gt;CaO" name="CaO"/>
+	</sheet>
+	<sheet name="Sheet2" row="1">
+		<field colum="0" mapping="=  Temlplate&gt;Description&gt;StationNo" name="stattion"/>
+		<field colum="1" mapping="=  Temlplate&gt;Description&gt;SampleType" name="type"/>
+		<field colum="2" mapping="=  Temlplate&gt;MajorElement&gt;SiO2" name="SiO2"/>
+		<field colum="3" mapping="=  Temlplate&gt;MicroElement&gt;Co" name="Al2O3"/>
+		<field colum="4" mapping="=  Temlplate&gt;MajorElement&gt;Fe2O3" name="Fe2O3"/>
+		<field colum="5" mapping="=  Temlplate&gt;MicroElement&gt;Cr" name="FeO"/>
+		<field colum="6" mapping="=  Temlplate&gt;MajorElement&gt;CaO" name="CaO"/>
+	</sheet>
+</book>

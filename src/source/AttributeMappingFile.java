@@ -1,4 +1,4 @@
-package create.source;
+package source;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -10,11 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
-
 import javax.swing.AbstractButton;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -39,14 +35,10 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.sun.corba.se.impl.orb.ParserTable.TestIIOPPrimaryToContactInfo;
-import com.sun.org.apache.xalan.internal.xsltc.compiler.NodeTest;
-
 import common.FieldMapping;
+import common.XMLList;
 import common.MyTreeCellRender;
 import common.MyTreeNode;
-import descript.FileList;
-import sun.net.TelnetInputStream;
 
 
 public class AttributeMappingFile extends JFrame {
@@ -58,8 +50,8 @@ public class AttributeMappingFile extends JFrame {
 	private JButton equalBtn;
 	
 	private ButtonHandler btnHandler;
-	private DefaultListModel<String> model;
-	private JList<String> mapList;
+	private DefaultListModel<FieldMapping> model;
+	private JList<FieldMapping> mapList;
 	private JButton removeBtn;
 	private JButton saveBtn;
 	private JButton bigBtn;
@@ -71,14 +63,11 @@ public class AttributeMappingFile extends JFrame {
 	private Document doc ;
 	
 	private ArrayList<MyTreeNode> mappedNode = new ArrayList<MyTreeNode>();
-	private ArrayList<TreePath> matchNode = new ArrayList<TreePath>();
 	
-	private FileList fileList;
-	
- 	public AttributeMappingFile( File file, FileList fileList ){
-		super("metadata mapping");
+ 	public AttributeMappingFile( File file){
+		super("Metadata Mapping");
+		setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		this.frame = this;
-		this.fileList = fileList;
 		
 		btnHandler = new ButtonHandler();
 		treeHandler = new TreeSelectHandler();
@@ -167,8 +156,8 @@ public class AttributeMappingFile extends JFrame {
 				new Insets(0, 0, 0, 0),
 				0, 0 ) );
 		
-		model = new DefaultListModel<String>();
-		mapList = new JList<String>(model);
+		model = new DefaultListModel<FieldMapping>();
+		mapList = new JList<FieldMapping>(model);
 		initMapList();
 		JScrollPane mapPane = new JScrollPane(mapList);
 		removeBtn = new JButton("Remove");
@@ -195,7 +184,7 @@ public class AttributeMappingFile extends JFrame {
 		setVisible(true);
 		
 		MyTreeNode r = (MyTreeNode) templateTree.getModel().getRoot();
-		MyTreeNode major = (MyTreeNode) r.getChildAt(1);
+		MyTreeNode major = (MyTreeNode) r.getChildAt(2);
 		
 		System.out.println( major );
 		((MyTreeNode) major.getChildAt(8)).setMatched(true);
@@ -215,7 +204,13 @@ public class AttributeMappingFile extends JFrame {
 				String mapping = ele.getAttribute("mapping").trim();
 				if( !mapping.equals("") ){
 					String path = utils.Utils.elementPathToString(ele);
-					model.addElement(path + mapping); 
+					ArrayList<MyTreeNode> nodes = getTreeNodeByPath(sourceTree,path);
+					MyTreeNode key = nodes.get( nodes.size() - 1 );
+					String relation = mapping.substring(0, 2).trim();
+					path = mapping.substring(2).trim();
+					nodes = getTreeNodeByPath(templateTree,path);
+					MyTreeNode value = nodes.get( nodes.size() - 1 );
+					model.addElement(new FieldMapping(key, relation, value) );
 				}
 			}
 		}catch(Exception e){
@@ -223,38 +218,46 @@ public class AttributeMappingFile extends JFrame {
 		}
 		
 	}
+	
+	private void removeMapItem() {
+		int index = mapList.getSelectedIndex();
+		if( index < 0 )return ;
+		FieldMapping item = model.remove(index);
+		MyTreeNode node = item.getKey();
+		node.setMappedNode(false);
+		Element element = (Element) node.getUserObject();
+		element.removeAttribute("mapping");
+		System.out.println("remove: " + item.toString() );
+		sourceTree.updateUI();
+	}
+	
 	class ButtonHandler implements ActionListener{
 		public void actionPerformed(ActionEvent e) {
 			AbstractButton btn = (AbstractButton) e.getSource();
 			System.out.println( btn.getText() );
 			switch( btn.getText() ){
 			case "=":
-				mapping("=");
+				addMapItem("=");
 				break;
 			case "<":
-				mapping("<");
+				addMapItem("<");
 				break;
 			case ">":
-				mapping(">");
+				addMapItem(">");
 				break;
 			case "Remove":
-				int index = mapList.getSelectedIndex();
-				if( index > 0 ){
-					model.remove(index);
-				}
+				removeMapItem();
 				break;
 			case "Save":
 				utils.Utils.saveXML( doc , file);
-				if( null != fileList ){
-					fileList.updateList();
-				}else{
-					System.out.println( "fileList is null");
-				}
+				
 				frame.dispose();
 				break;
 			default:
 			}
 		}
+
+		
 	}
 	
 	class TreeSelectHandler implements TreeSelectionListener{
@@ -274,7 +277,7 @@ public class AttributeMappingFile extends JFrame {
 			Element docNode = (Element) treeNode.getUserObject();
 			String mapping = docNode.getAttribute("mapping").trim();
 			if( !mapping.equals("") ){
-				ArrayList<MyTreeNode> nodes = getMappingTreeNodes(mapping);
+				ArrayList<MyTreeNode> nodes = getTreeNodeByPath(templateTree,mapping);
 				templateTree.scrollPathToVisible(new TreePath( nodes.toArray()));
 				MyTreeNode last = nodes.get(nodes.size()-1);
 				last.setMappedNode(true);
@@ -284,71 +287,44 @@ public class AttributeMappingFile extends JFrame {
 		}
 		
 	} 
-	private void mapping(String relation){
+	private void addMapItem(String relation){
 		MyTreeNode s= (MyTreeNode) sourceTree.getLastSelectedPathComponent();
 		MyTreeNode t= (MyTreeNode) templateTree.getLastSelectedPathComponent();
-		System.out.println("mapping");
-		if( s.isLeaf() && t.isLeaf() ){
-			try {
-				wirteToFile( s, relation, t );
-				showOnPanel( s, relation, t );
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		if( checkMapping( s, t ) ){
+			FieldMapping m = new FieldMapping( s , relation, t );
+			Element keyEle = (Element) s.getUserObject();
+			keyEle.setAttribute("mapping",  m.mapString() );
+			model.addElement( m );
 		}else{
-			JOptionPane.showMessageDialog(null, "just field node can mapping");
+			JOptionPane.showMessageDialog(null, "fubidden mapping");
 		}
 	}
-	private void showOnPanel(MyTreeNode source, String relation, MyTreeNode template) {
-		model.addElement(new FieldMapping( source, relation, template ).toString() );
-	}
-	private void wirteToFile( MyTreeNode source, String relation, MyTreeNode template ) throws Exception{
-		Element sourceElement = (Element) source.getUserObject();
-		Element templateElement = (Element) template.getUserObject();
-		String mappingTarget = getMappingTarget( relation, templateElement);
-		System.out.println( mappingTarget + "write");
-		if( isMappingTargetExist( doc,  mappingTarget) ){
-			JOptionPane.showMessageDialog(null, "this template field has have mapping field");
-			throw new Exception("this template field has have mapping field");
-		}else{
-			sourceElement.setAttribute("mapping", mappingTarget );
+	private boolean checkMapping( MyTreeNode key, MyTreeNode value ) {
+		if( null == key || !key.isLeaf() )return false;
+		if( null == value || !value.isLeaf() )return false;
+		Element element = (Element) key.getUserObject();
+		while( null != element && element.getNodeName().equals("sheet") ){
+			element = (Element) element.getParentNode();
 		}
-	}
-	
-	private String getMappingTarget( String relation, Element targetElement ){
-		return relation + " " + utils.Utils.elementPathToString(targetElement);
-	}
-	private boolean isMappingTargetExist( Document doc, String value ){
-		NodeList fields = doc.getElementsByTagName("field");
-		for( int i = 0; i < fields.getLength(); i++ ){
-			NamedNodeMap fieldAttr = fields.item(i).getAttributes();
-			Node map = fieldAttr.getNamedItem("mapping");
-			if(  null != map ){
-				System.out.println( map.getNodeValue() );
-				if(map.getNodeValue().trim().equals( value ) ){
-					return true;
-				}	
-			}
-		}
-		return false;
-	}
-	private boolean passable(){
-		Element e = null;
-		String[] ids = new String[]
-				{"requestNo","voyage","stationNo","sampleType","sampleNo"};
-		for( int i = 0; i < ids.length; i++ ){
-			e = doc.getElementById(ids[i]);
-			if( e.getAttribute("mapping") == null ){
+		if( null == element )return false;
+		Element valueEle = (Element) value.getUserObject();
+		String mapInfo = utils.Utils.elementPathToString(valueEle);
+		NodeList list = element.getElementsByTagName("field");
+		for( int i = 0; i < list.getLength(); i++ ){
+			Element field = (Element) list.item(i);
+			String map = field.getAttribute("mapping");
+			if( map.equals( mapInfo ) ){
 				return false;
 			}
 		}
 		return true;
 	}
 	
-	public ArrayList<MyTreeNode> getMappingTreeNodes( String path ){
+	
+	public ArrayList<MyTreeNode> getTreeNodeByPath( JTree tree, String path ){
 		String[] nodes = path.split(">");
 		MyTreeNode parent = (MyTreeNode) 
-				templateTree.getModel().getRoot();
+				tree.getModel().getRoot();
 		MyTreeNode node = null;
 		ArrayList<MyTreeNode> nodeList = new ArrayList<MyTreeNode>();
 		nodeList.add( parent );
@@ -372,6 +348,6 @@ public class AttributeMappingFile extends JFrame {
 		return null;
 	}
 	public static void main( String[] args ){
-		//new AttributeMappingFile(new File("tree/blankSourceTree.xml"), null);
+		new AttributeMappingFile(new File("tree/blankSourceTree.xml"));
 	}
 }
