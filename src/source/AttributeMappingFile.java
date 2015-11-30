@@ -31,12 +31,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import common.FieldMapping;
-import common.XMLList;
 import common.MyTreeCellRender;
 import common.MyTreeNode;
 
@@ -76,6 +74,8 @@ public class AttributeMappingFile extends JFrame {
 		this.file = file;
 		try {
 			templateTree = new JTree( utils.Utils.createTree("tree/sys/templateTree.xml") );
+			templateTree.setLargeModel(true);
+			templateTree.setRowHeight(18);
 		} catch (Exception e) {
 			System.out.println("Can't open templateTree.xml");
 			e.printStackTrace();
@@ -90,6 +90,8 @@ public class AttributeMappingFile extends JFrame {
 		
 		try {
 			sourceTree = new JTree( utils.Utils.createTree(file));
+			sourceTree.setLargeModel(true);
+			sourceTree.setRowHeight(18);
 			MyTreeNode root = (MyTreeNode) sourceTree.getModel().getRoot();
 			this.doc = ((Node)root.getUserObject()).getOwnerDocument();
 		} catch (Exception e) {
@@ -187,9 +189,9 @@ public class AttributeMappingFile extends JFrame {
 		MyTreeNode major = (MyTreeNode) r.getChildAt(2);
 		
 		System.out.println( major );
-		((MyTreeNode) major.getChildAt(8)).setMatched(true);
-		((MyTreeNode) major.getChildAt(9)).setMatched(true);
 		((MyTreeNode) major.getChildAt(10)).setMatched(true);
+		((MyTreeNode) major.getChildAt(11)).setMatched(true);
+		((MyTreeNode) major.getChildAt(12)).setMatched(true);	
 		
 	}
 	private void initMapList() {
@@ -348,6 +350,6 @@ public class AttributeMappingFile extends JFrame {
 		return null;
 	}
 	public static void main( String[] args ){
-		new AttributeMappingFile(new File("tree/blankSourceTree.xml"));
+		new AttributeMappingFile(new File("tree/major.xml"));
 	}
 }

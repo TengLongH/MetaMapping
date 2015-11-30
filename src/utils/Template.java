@@ -4,7 +4,6 @@ import java.io.File;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -25,7 +24,7 @@ public class Template {
 			xml = builder.parse(new File("tree/sys/templateTree.xml"));
 			book = xml.getDocumentElement();
 			Element descript = Utils.getChildElementByName(book, "Description");
-			descriptRow = Integer.parseInt( descript.getAttribute("row"));
+			descriptRow = Integer.parseInt( descript.getAttribute("data"));
 			Element column = utils.Utils.getChildElementByName(
 					descript, "SampleNo");
 			sampleNo = Integer.parseInt( column.getAttribute("colum"));

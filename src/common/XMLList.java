@@ -10,7 +10,6 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -18,7 +17,6 @@ import java.io.IOException;
 import javax.swing.AbstractButton;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JList;
@@ -27,8 +25,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.filechooser.FileFilter;
 
-import javafx.scene.layout.Border;
-import main.Main;
 import source.TitleArchitectureFile;
 
 public class XMLList extends JFrame 
@@ -47,8 +43,9 @@ implements ActionListener, WindowListener, Watcher{
 	
 	private JFileChooser xmlChooser ;
 	
-	public XMLList(Main main){
-		
+	private File excel;
+	public XMLList( File excel ){
+		this.excel = excel;
 		setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		updateList();
 		add( new JScrollPane( list )  );
@@ -118,45 +115,49 @@ implements ActionListener, WindowListener, Watcher{
 		AbstractButton button = (AbstractButton) e.getSource();
 		switch( button.getText()){
 		case "Edit":
-			String fileName = list.getSelectedValue();
-			if( null == fileName )return ;
-			fileName = "tree/" + fileName;
-			new TitleArchitectureFile(fileName, this);
+			edit();
 			break;
 		case "Import":
-			int value = xmlChooser.showOpenDialog(this);
-			if( JFileChooser.APPROVE_OPTION == value ){
-				File choose = xmlChooser.getSelectedFile();
-				File copy = copyToLib( choose );
-				if( null != copy ){
-					model.addElement( copy.getName() );
-				}else{
-					JOptionPane.showMessageDialog(this, "import failed");
-				}
-			}
+			importXML();
 			break;
 		case "Create":
-			new TitleArchitectureFile(this);
+			new TitleArchitectureFile(excel);
 			break;
 		case "Remove":
-			String name = list.getSelectedValue();
-			if( null != name ){
-				model.removeElement(name);
-				name = "tree/" + name;
-				removeXML(name);
-			}
+			remove();
 			break;
 		case "Save":
 			this.dispose();
 			break;
 			default:
-				
+		}
+	}
+	private void edit() {
+		String fileName = list.getSelectedValue();
+		if( null == fileName )return ;
+		new TitleArchitectureFile(new File( "tree/" + fileName ));
+	}
+	private void importXML() {
+		int value = xmlChooser.showOpenDialog(this);
+		if( JFileChooser.APPROVE_OPTION == value ){
+			File choose = xmlChooser.getSelectedFile();
+			File copy = copyToLib( choose );
+			if( null != copy ){
+				model.addElement( copy.getName() );
+			}else{
+				JOptionPane.showMessageDialog(this, "import failed");
+			}
 		}
 	}
 	
-	private boolean removeXML( String fileName ){
-		File file = new File( fileName );
-		return file.delete();
+	private boolean remove(){
+		String name = list.getSelectedValue();
+		if( null != name ){
+			model.removeElement(name);
+			File file = new File( "tree/" + name );
+			return file.delete();
+		}
+		return false;
 	}
 	private File copyToLib(File choose) {
 		File file = new File("tree/" + choose.getName() );

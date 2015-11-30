@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JOptionPane;
-import javax.swing.tree.TreePath;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -17,6 +16,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.poi.ss.usermodel.Cell;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -40,6 +40,25 @@ public class Utils {
 			e.printStackTrace();
 		}
 		
+	}
+	
+	public static String getCellStringValue( Cell cell ){
+		if( null == cell )return null;
+		switch( cell.getCellType() ){
+		case Cell.CELL_TYPE_BLANK:
+			return null;
+		case Cell.CELL_TYPE_BOOLEAN:
+			return String.valueOf( cell.getBooleanCellValue() );
+		case Cell.CELL_TYPE_ERROR:
+			return null;
+		case Cell.CELL_TYPE_FORMULA:
+			return null;
+		case Cell.CELL_TYPE_NUMERIC:
+			return String.valueOf( cell.getNumericCellValue() );
+		case Cell.CELL_TYPE_STRING:
+			return cell.getStringCellValue();
+		}
+		return null;
 	}
 	public static String getAttribute( Element root, Object[] path, String attri ){
 		Element element = getElementByPath(root, path);

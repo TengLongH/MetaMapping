@@ -2,25 +2,19 @@ package source;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.poi.EncryptedDocumentException;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -102,7 +96,7 @@ public class Transport {
 				}
 			}
 
-			startRow = Integer.parseInt(xmlSheet.getAttribute("row"));
+			startRow = Integer.parseInt(xmlSheet.getAttribute("data"));
 			for (int i = startRow; i <= sheet.getLastRowNum(); i++) {
 				transformRow(sheet.getRow(i), stationNo, sampleType);
 			}
@@ -153,9 +147,10 @@ public class Transport {
 	private Row getRow(String sheetName, String sampleNo) {
 		Row row = null;
 		Cell cell = null;
+		
 		Sheet sheet = templateBook.getSheet(sheetName);
 		// get the start data row of sheet and the sampleNo column index
-		String attr = Template.get(new String[] { sheetName }, "row");
+		String attr = Template.get(new String[] { sheetName }, "data");
 		int startRow = Integer.parseInt(attr);
 		attr = Template.get(new String[] { sheetName, "SampleNo" }, "colum");
 		int index = Integer.parseInt(attr);
@@ -222,7 +217,7 @@ public class Transport {
 				Element column = (Element) columns.item(i);
 				srcIndex = Integer.parseInt(column.getAttribute("colum"));
 				mapping = column.getAttribute("mapping").trim();
-				if (null == mapping)
+				if (null == mapping || mapping.trim().equals("") )
 					continue;
 				mapping = mapping.substring(2).trim();
 				path = new ArrayList<String>(Arrays.asList(mapping.split(">")));

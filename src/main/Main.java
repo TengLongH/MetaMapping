@@ -5,20 +5,21 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import javax.swing.AbstractButton;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.filechooser.FileFilter;
@@ -27,7 +28,6 @@ import common.WatchDir;
 import common.Watcher;
 import common.XMLList;
 import source.Transport;
-import sun.net.www.content.audio.wav;
 
 public class Main extends JFrame implements ActionListener, Watcher{
 
@@ -49,8 +49,7 @@ public class Main extends JFrame implements ActionListener, Watcher{
 	
 	Thread thread;
 	public Main(){
-		
-		
+
 		try {
 			Path dir = Paths.get("tree");
 			watch = new WatchDir( dir );
@@ -164,7 +163,7 @@ public class Main extends JFrame implements ActionListener, Watcher{
 		new Transport(source, xml);
 	}
 	private void editXML() {
-		XMLList xmlList = new XMLList( this );
+		XMLList xmlList = new XMLList( source );
 		watch.addWatcher(xmlList);
 	}
 	private void chooseSourceFile() {
@@ -181,7 +180,12 @@ public class Main extends JFrame implements ActionListener, Watcher{
 	}
 
 	public static void main(String[] args) {
-		
+//		try {
+//			System.setErr( new PrintStream(new File("tree/sys/log.txt")));
+//		} catch (FileNotFoundException e) {
+//			JOptionPane.showMessageDialog(null, "can't find log file");
+//			e.printStackTrace();
+//		}
 		new Main();
 	}
 	
