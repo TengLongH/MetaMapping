@@ -59,7 +59,7 @@ public class AttributeMappingFile extends JFrame {
 	private TreeSelectHandler treeHandler;
 	private File file;
 	private Document doc ;
-	
+	//源文件被选中节点在模板中的映射节点
 	private ArrayList<MyTreeNode> mappedNode = new ArrayList<MyTreeNode>();
 	
  	public AttributeMappingFile( File file){
@@ -272,6 +272,28 @@ public class AttributeMappingFile extends JFrame {
 			DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) 
 					select.getLastSelectedPathComponent();
 			if( null == treeNode )return ;
+			markMappedNode(treeNode);
+			markMapItem( treeNode );
+			templateTree.updateUI();
+		}
+
+		private void markMapItem(DefaultMutableTreeNode treeNode) {
+			Element docNode = (Element) treeNode.getUserObject();
+			String mapping = docNode.getAttribute("mapping").trim();
+			if( mapping.equals("") )return ;
+			String path = utils.Utils.elementPathToString(docNode);
+			
+			for( int i = 0; i < model.getSize(); i++ ){
+				FieldMapping fm = model.get(i);
+				if(fm.keyString().equals(path) ){
+					mapList.setSelectedIndex(i);
+					mapList.ensureIndexIsVisible(i);
+					break;
+				}
+			}
+		}
+
+		private void markMappedNode(DefaultMutableTreeNode treeNode) {
 			for( int i = 0; i < mappedNode.size(); i++ ){
 				mappedNode.get(i).setMappedNode(false);
 			}
@@ -285,7 +307,6 @@ public class AttributeMappingFile extends JFrame {
 				last.setMappedNode(true);
 				mappedNode.add(last);
 			}
-			templateTree.updateUI();
 		}
 		
 	} 
@@ -296,26 +317,39 @@ public class AttributeMappingFile extends JFrame {
 			FieldMapping m = new FieldMapping( s , relation, t );
 			Element keyEle = (Element) s.getUserObject();
 			keyEle.setAttribute("mapping",  m.mapString() );
+			for( int i = 0; i < model.size(); i++ ){
+				FieldMapping fm = model.getElementAt(i);
+				if( fm.keyString().equals(m.keyString()) ){
+					model.remove(i);
+				}
+			}
 			model.addElement( m );
+			mapList.setSelectedIndex(model.size()-1);
+			mapList.ensureIndexIsVisible(model.size()-1);
 		}else{
 			JOptionPane.showMessageDialog(null, "fubidden mapping");
 		}
 	}
+	//不允许同一张Sheet里的两列对应到同一列，extraColumn除外
 	private boolean checkMapping( MyTreeNode key, MyTreeNode value ) {
 		if( null == key || !key.isLeaf() )return false;
 		if( null == value || !value.isLeaf() )return false;
+		Element valueEle = (Element) value.getUserObject();
+		if( valueEle.getAttribute("name").trim().equals("ExtraColumn")){
+			return true;
+		}
 		Element element = (Element) key.getUserObject();
-		while( null != element && element.getNodeName().equals("sheet") ){
-			element = (Element) element.getParentNode();
+		while( null != element && !element.getNodeName().equals("sheet") ){
+			element = (Element)element.getParentNode();
 		}
 		if( null == element )return false;
-		Element valueEle = (Element) value.getUserObject();
+		
 		String mapInfo = utils.Utils.elementPathToString(valueEle);
 		NodeList list = element.getElementsByTagName("field");
 		for( int i = 0; i < list.getLength(); i++ ){
 			Element field = (Element) list.item(i);
 			String map = field.getAttribute("mapping");
-			if( map.equals( mapInfo ) ){
+			if( map.endsWith( mapInfo ) ){
 				return false;
 			}
 		}

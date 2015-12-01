@@ -1,8 +1,11 @@
 package source;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,23 +37,26 @@ public class Transport {
 
 	public Transport(File source, File descript) {
 		try {
-			OutputStream temp = new FileOutputStream(new File("tree/sys/result.xlsx"));
-			templateBook = WorkbookFactory.create(new File("tree/sys/template.xlsx"));
-			templateBook.write(temp);
-			templateBook.close();
-			temp.close();
-
-			templateBook = WorkbookFactory.create(new File("tree/sys/result.xlsx"));
-			sourceBook = WorkbookFactory.create(source);
+			String name = "temp.xls";
+			name += source.getName().endsWith("xls") ? "" : "x";
+			Path temp = Paths.get("tree", "sys", name );
+			if( Files.exists(temp) )Files.delete(temp);
+			Files.copy( new FileInputStream(source), temp );
+			Path plate = Paths.get("tree", "sys", "template.xlsx");
+			Path result = Paths.get( "tree", "sys","result.xlsx") ;
+			if( Files.exists(result) )Files.delete(result);
+			Files.copy(plate, result );
+			
+			templateBook = WorkbookFactory.create( result.toFile() );
+			sourceBook = WorkbookFactory.create( temp.toFile() );
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			sourceRoot = builder.parse(descript).getDocumentElement();
 			transformBook();
-			temp = new FileOutputStream(new File("result.xlsx"));
-			templateBook.write(temp);
-			temp.flush();
-			temp.close();
+			FileOutputStream fos = new FileOutputStream( new File("result.xlsx") );
+			templateBook.write(fos);
 			templateBook.close();
+			fos.close();
 			sourceBook.close();
 
 		} catch (Exception e) {
@@ -81,21 +87,18 @@ public class Transport {
 			parseSheetMapping(xmlSheet);
 			Collections.sort(map);
 			// 获取样品的站位号和类型
-			NodeList columns = xmlSheet.getElementsByTagName("field");
-			for (int i = 0; i < columns.getLength(); i++) {
+			for( ColumnMapping cm : map ){
 				if (stationNo >= 0 && sampleType >= 0)
 					break;
-				Element column = (Element) columns.item(i);
-				String mapping = column.getAttribute("mapping").trim();
-				if (null == mapping)
-					continue;
-				if (mapping.endsWith("Temlplate>Description>StationNo")) {
-					stationNo = Integer.parseInt(column.getAttribute("colum"));
-				} else if (mapping.endsWith("Temlplate>Description>SampleType")) {
-					sampleType = Integer.parseInt(column.getAttribute("colum"));
+				if( cm.getPlateColumn() == Template.getStationNo() ){
+					stationNo = cm.getSourceColumn();
+				}else if( cm.getPlateColumn() == Template.getSampleType() ){
+					sampleType = cm.getSourceColumn();
 				}
 			}
-
+			if( stationNo < 0 || sampleType < 0){
+				throw new Exception("can't find stationNo or sampleNo");
+			}
 			startRow = Integer.parseInt(xmlSheet.getAttribute("data"));
 			for (int i = startRow; i <= sheet.getLastRowNum(); i++) {
 				transformRow(sheet.getRow(i), stationNo, sampleType);
@@ -121,7 +124,7 @@ public class Transport {
 			sampleNo = getsampleNo(station, type);
 			for( ColumnMapping m : map ){
 				cell = row.getCell(m.getSourceColumn());
-				transformCell(cell, m.getPlateSheet(), m.getPlateColumn(), sampleNo);
+				transformCell(cell, m , sampleNo);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -129,19 +132,36 @@ public class Transport {
 		}
 	}
 
-	private void transformCell(Cell srcCell, String sheetName, int desIndex, String sampleNo) {
+	private void transformCell(Cell srcCell, ColumnMapping m, String sampleNo) {
 
+		if( m.getPlateSheet().equals("ExtraSheet") ){
+			addExtraItem( srcCell, m, sampleNo );
+			preSheetName = m.getPlateSheet();
+			return ;
+		}
 		try {
-			if (!sheetName.equals(preSheetName)) {
-				curRow = getRow(sheetName, sampleNo);
+			if (!m.getPlateSheet().equals(preSheetName)) {
+				curRow = getRow(m.getPlateSheet(), sampleNo);
+				preSheetName = m.getPlateSheet();
 			}
-			Cell desCell = curRow.getCell(desIndex, Row.CREATE_NULL_AS_BLANK);
+			Cell desCell = curRow.getCell(m.getPlateColumn(), Row.CREATE_NULL_AS_BLANK);
 			copyCell(srcCell, desCell);
 		} catch (Exception e) {
-			System.out.printf("Sheet:%s desIndex:%d sampleNo:%s", sheetName, desIndex, sampleNo);
 			e.printStackTrace();
 		}
 
+	}
+
+	private void addExtraItem(Cell srcCell, ColumnMapping m, String sampleNo) {
+		Sheet sheet = templateBook.getSheet("ExtraSheet");
+		if( null == sheet )return ;
+		Row row = sheet.createRow(sheet.getLastRowNum() + 1 );
+		Cell cell = row.createCell(0);
+		cell.setCellValue( sampleNo );
+		cell = row.createCell(1);
+		cell.setCellValue(m.getSourcePath());
+		cell = row.createCell(2);
+		copyCell(srcCell, cell);
 	}
 
 	private Row getRow(String sheetName, String sampleNo) {
@@ -219,13 +239,15 @@ public class Transport {
 				mapping = column.getAttribute("mapping").trim();
 				if (null == mapping || mapping.trim().equals("") )
 					continue;
+				
 				mapping = mapping.substring(2).trim();
 				path = new ArrayList<String>(Arrays.asList(mapping.split(">")));
 				path.remove(0);
 				sheetName = path.get(0);
 				String strColumn = Template.get(path.toArray(), "colum");
 				columnIndex = Integer.parseInt(strColumn);
-				map .add( new ColumnMapping(srcIndex, columnIndex, sheetName));
+				String srcPath = utils.Utils.elementPathToString(column);
+				map .add( new ColumnMapping(srcPath, srcIndex, columnIndex, sheetName));
 			}
 		} catch (Exception e) {
 			System.err.printf("%s %s %d", mapping, path, srcIndex);

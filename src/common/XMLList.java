@@ -13,6 +13,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 import javax.swing.AbstractButton;
 import javax.swing.DefaultListModel;
@@ -135,7 +137,7 @@ implements ActionListener, WindowListener, Watcher{
 	private void edit() {
 		String fileName = list.getSelectedValue();
 		if( null == fileName )return ;
-		new TitleArchitectureFile(new File( "tree/" + fileName ));
+		new TitleArchitectureFile("tree/" + fileName, excel );
 	}
 	private void importXML() {
 		int value = xmlChooser.showOpenDialog(this);
@@ -159,6 +161,7 @@ implements ActionListener, WindowListener, Watcher{
 		}
 		return false;
 	}
+	@SuppressWarnings("resource")
 	private File copyToLib(File choose) {
 		File file = new File("tree/" + choose.getName() );
 		while( file.exists() ){
@@ -172,15 +175,20 @@ implements ActionListener, WindowListener, Watcher{
 			}
 		}
 		
-		FileOutputStream out = null;
-		FileInputStream  in = null;
+		FileChannel out = null;
+		FileChannel  in = null;
+		ByteBuffer  buf = ByteBuffer.allocate(1024);
 		try {
-			int length = 0;
-			byte[] buffer = new byte[1024];
-			out = new FileOutputStream( file );
-			in  = new FileInputStream( choose );
-			while( ( length = in.read(buffer) ) > 0 ){
-				out.write(buffer, 0, length);
+			out = new FileOutputStream( file ).getChannel();
+			in  = new FileInputStream( choose ).getChannel();
+			while( true ){
+				buf.clear();
+				int len = in.read(buf);
+				if( len < 0 ){
+					break;
+				}
+				buf.flip();
+				out.write(buf);
 			}
 			in.close();
 			in = null;

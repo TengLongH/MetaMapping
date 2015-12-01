@@ -6,7 +6,8 @@ public class ColumnMapping implements Comparable<ColumnMapping>{
 	private int sourceColumn;
 	private int plateColumn;
 	private String plateSheet;
-	public ColumnMapping( int sourceColumn, int plateColumn, String plateSheet) {
+	public ColumnMapping( String path, int sourceColumn, int plateColumn, String plateSheet) {
+		this.sourcePath = path;
 		this.sourceColumn = sourceColumn;
 		this.plateColumn = plateColumn;
 		this.plateSheet = plateSheet;
@@ -19,6 +20,10 @@ public class ColumnMapping implements Comparable<ColumnMapping>{
 	}
 	public String getPlateSheet() {
 		return plateSheet;
+	}
+	
+	public String getSourcePath() {
+		return sourcePath;
 	}
 	@Override
 	public int compareTo( ColumnMapping compare ) {

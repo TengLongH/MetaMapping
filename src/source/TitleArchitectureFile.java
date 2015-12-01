@@ -74,13 +74,13 @@ public class TitleArchitectureFile extends JFrame {
 		this("tree/sys/blankSourceTree.xml", excel);
 	}
 
-	public TitleArchitectureFile(String sourceName, File excel) {
+	public TitleArchitectureFile(String xml, File excel) {
 		super("Analysis Title");
 		this.frame = this;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		// setLayout(new GridBagLayout());
 		setLayout(new GridLayout(1, 2));
-		this.sourceFile = new File(sourceName);
+		this.sourceFile = new File(xml);
 		System.out.println(sourceFile.exists());
 
 		try {
@@ -461,7 +461,7 @@ public class TitleArchitectureFile extends JFrame {
 
 	public void dispose() {
 		try {
-			book.close();
+			if( null != book )book.close();
 		} catch (IOException e) {}
 		finally{
 			super.dispose();
