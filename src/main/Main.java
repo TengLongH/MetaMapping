@@ -5,29 +5,27 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import javax.swing.AbstractButton;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.filechooser.FileFilter;
 
+import common.MyButton;
 import common.WatchDir;
 import common.Watcher;
 import common.XMLList;
 import source.Transport;
+import utils.Config;
+import utils.Lang;
 
 public class Main extends JFrame implements ActionListener, Watcher{
 
@@ -36,11 +34,11 @@ public class Main extends JFrame implements ActionListener, Watcher{
 
 	private DefaultComboBoxModel<String> boxModel ;
 	private JComboBox<String> xmlBox;
-	private JButton editXMLButton;
+	private MyButton editXMLButton;
 	private JTextField sourceField ;
 	private JFileChooser sourceChooser = new JFileChooser();
-	private JButton sourceButton;
-	private JButton importButton;
+	private MyButton sourceButton;
+	private MyButton importButton;
 	
 	private File xml;
 	private File source;
@@ -63,25 +61,25 @@ public class Main extends JFrame implements ActionListener, Watcher{
 		setLayout( new GridLayout(3, 1) );
 		setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		JPanel xmlPanel = new JPanel();
-		xmlPanel.add(new JLabel("Descript:") );
+		xmlPanel.add(new JLabel( Lang.get("xml") + ":" ) );
 		boxModel = new DefaultComboBoxModel<String>();
 		xmlBox = new JComboBox<String>( boxModel );
 		updateXMLBox();
 		xmlBox.setPreferredSize(new Dimension(224, 26));
 		xmlPanel.add( xmlBox );
 		
-		editXMLButton = new JButton("Edit");
+		editXMLButton = new MyButton("button-edit");
 		editXMLButton.addActionListener(this);
 		editXMLButton.setPreferredSize(new Dimension(100, 26));
 		xmlPanel.add( editXMLButton );
 		
 		
 		JPanel sourcePanel = new JPanel();
-		sourcePanel.add(new JLabel("   Source:"));
+		sourcePanel.add(new JLabel( Lang.get("source") + ":"));
 		sourceField = new JTextField(20);
 		sourceField.setPreferredSize(new Dimension(250, 26));
 		sourcePanel.add(sourceField);
-		sourceButton = new JButton("Choose");
+		sourceButton = new MyButton("button-choose");
 		sourceButton.addActionListener(this);
 		sourceButton.setPreferredSize(new Dimension(100, 26));
 		sourceChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -100,7 +98,7 @@ public class Main extends JFrame implements ActionListener, Watcher{
 		
 		
 		JPanel buttonPanel = new JPanel();
-		importButton = new JButton("Import");
+		importButton = new MyButton("button-import");
 		importButton.addActionListener(this);
 		buttonPanel.add(importButton);
 		
@@ -138,16 +136,16 @@ public class Main extends JFrame implements ActionListener, Watcher{
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		AbstractButton button = (AbstractButton) e.getSource();
-		System.out.println( button.getText() );
-		switch( button.getText() ){
-		case "Edit":
+		MyButton button =  (MyButton) e.getSource();
+		System.out.println( button.getId() );
+		switch( button.getId() ){
+		case "button-edit":
 			editXML();
 			break;
-		case "Choose":
+		case "button-choose":
 			chooseSourceFile();
 			break;
-		case "Import":
+		case "button-import":
 			transport();
 			break;
 			default:
@@ -186,7 +184,16 @@ public class Main extends JFrame implements ActionListener, Watcher{
 //			JOptionPane.showMessageDialog(null, "can't find log file");
 //			e.printStackTrace();
 //		}
-		new Main();
+		
+		try {
+			Config.load();
+			Lang.load( Config.get("lang") );
+			new Main();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
 	}
 	
 }

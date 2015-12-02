@@ -3,13 +3,13 @@
 	<sheet name="ExtraSheet" data="0" title="0">
         <field name="ExtraColumn"  colum="0"></field>
     </sheet>
-    <sheet id="description" name="Description" data="4" title="3">
-        <field id="requestNo" name="RequstNo"  colum="0"></field>
+    <sheet name="Description" data="4" title="3">
+        <field name="RequstNo"  colum="0"></field>
 	<field name="Applicant"  colum="1"></field>
-        <field id="voyage" name="Voyage"  colum="2"></field>
-        <field id="stationNo" name="StationNo"  colum="3"></field>
-        <field id="sampleType" name="SampleType"  colum="4"></field>
-        <field id="sampleNo" name="SampleNo"  colum="5"></field>
+        <field name="Voyage"  colum="2"></field>
+        <field name="StationNo"  colum="3"></field>
+        <field name="SampleType"  colum="4"></field>
+        <field name="SampleNo"  colum="5"></field>
         <field name="Count"  colum="6"></field>
         <field name="Amount"  colum="7"></field>
         <field name="Depth"  colum="8"></field>
@@ -18,7 +18,7 @@
         <field name="User" colum="11"></field>
     </sheet>
     <sheet name="MajorElement" data="5"  title="3">
-        <field name="SampleNo"  id="MajorElement-sampleNo" colum="0"></field>
+        <field name="SampleNo"  colum="0"></field>
         <field name="TestNo"  colum="1"></field>
         <field name="TestInstitution"  colum="2"></field>
         <field name="SampleTestNo"  colum="3"></field>
@@ -45,7 +45,7 @@
         <field name="Total"  colum="27"></field>
     </sheet>
     <sheet name="MicroElement" data="5"  title="3">
-        <field name="SampleNo" id="MicroElement-sampleNo" colum="0"></field>
+        <field name="SampleNo" colum="0"></field>
         <field name="TestNo"  colum="1"></field>
         <field name="TestInstitution"  colum="2"></field>
         <field name="sampleTestNo"  colum="3"></field>

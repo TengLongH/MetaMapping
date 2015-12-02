@@ -15,8 +15,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Vector;
 
-import javax.swing.AbstractButton;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -41,11 +39,14 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import common.Attr;
+import common.MyButton;
 import common.MyDefaultTableModel;
 import common.MyTreeCellRender;
 import common.MyTreeNode;
+import utils.Lang;
 
-public class TitleArchitectureFile extends JFrame {
+public class TitleArchitectureFile extends JFrame
+implements ActionListener, TableModelListener, MouseListener{
 
 	private static final long serialVersionUID = 1L;
 
@@ -54,21 +55,19 @@ public class TitleArchitectureFile extends JFrame {
 
 	private JTree tree;
 	private JTable editTable;
-	private JButton delButton;
-	private JButton addButton;
+	private MyButton delButton;
+	private MyButton addButton;
 
-	private JButton sheetButton;
-	private JButton mergButton;
-	private JButton fieldButton;
+	private MyButton sheetButton;
+	private MyButton mergButton;
+	private MyButton fieldButton;
 
-	private JButton saveButton;
-	private ButtonsListener buttonListener = new ButtonsListener();
+	private MyButton saveButton;
 	// data
 	private TreePath curPath;
 
 	private Workbook book;
 
-	private JFrame frame;
 
 	public TitleArchitectureFile(File excel) {
 		this("tree/sys/blankSourceTree.xml", excel);
@@ -76,8 +75,7 @@ public class TitleArchitectureFile extends JFrame {
 
 	public TitleArchitectureFile(String xml, File excel) {
 		super("Analysis Title");
-		this.frame = this;
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		// setLayout(new GridBagLayout());
 		setLayout(new GridLayout(1, 2));
 		this.sourceFile = new File(xml);
@@ -103,7 +101,7 @@ public class TitleArchitectureFile extends JFrame {
 		MyTreeCellRender render = new MyTreeCellRender();
 		tree.setCellRenderer(render);
 		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-		tree.addMouseListener(new JTreeListener());
+		tree.addMouseListener( this );
 
 		add(new JScrollPane(tree));
 		// add(new JScrollPane(tree), new GridBagConstraints(0, 0, 1, 1, 1, 1,
@@ -112,35 +110,55 @@ public class TitleArchitectureFile extends JFrame {
 
 		JPanel leftPanel = new JPanel();
 		leftPanel.setLayout(new GridBagLayout());
-		delButton = new JButton("Remove");
-		delButton.addActionListener(buttonListener);
+		delButton = new MyButton("button-remove");
+		delButton.addActionListener(this);
 		leftPanel.add(delButton, new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.CENTER,
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-		addButton = new JButton("Add");
+		addButton = new MyButton("button-add");
 		leftPanel.add(addButton, new GridBagConstraints(0, 1, 1, 1, 1, 0, GridBagConstraints.CENTER,
 				GridBagConstraints.HORIZONTAL, new Insets(5, 0, 0, 0), 0, 0));
 
 		JPanel addPanel = new JPanel();
 		addPanel.setLayout(new GridLayout(1, 3));
-		sheetButton = new JButton("Sheet");
-		sheetButton.addActionListener(buttonListener);
-		mergButton = new JButton("Columns");
-		mergButton.addActionListener(buttonListener);
-		fieldButton = new JButton("Column");
-		fieldButton.addActionListener(buttonListener);
+		sheetButton = new MyButton("button-sheet");
+		sheetButton.addActionListener(this);
+		mergButton = new MyButton("button-columns");
+		mergButton.addActionListener(this);
+		fieldButton = new MyButton("button-column");
+		fieldButton.addActionListener(this);
 		addPanel.add(sheetButton);
 		addPanel.add(mergButton);
 		addPanel.add(fieldButton);
 
 		leftPanel.add(addPanel, new GridBagConstraints(0, 2, 1, 1, 1, 0, GridBagConstraints.CENTER,
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 5, 0), 0, 0));
-		JButton editButton = new JButton("Edit");
+		MyButton editButton = new MyButton("button-edit");
 		leftPanel.add(editButton, new GridBagConstraints(0, 3, 1, 1, 1, 0, GridBagConstraints.CENTER,
 				GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 
+		createTable();
+		
+		leftPanel.add(new JScrollPane(editTable), new GridBagConstraints(0, 4, 1, 1, 1, 1, GridBagConstraints.CENTER,
+				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
+
+		saveButton = new MyButton("button-save");
+		saveButton.addActionListener(this);
+		leftPanel.add(saveButton, new GridBagConstraints(0, 5, 1, 1, 0, 0, GridBagConstraints.SOUTHEAST,
+				GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+
+		add(leftPanel);
+		
+		setSize(new Dimension(650, 700));
+		setVisible(true);
+		setLocationRelativeTo(null);
+
+		setCurrentPath(null);
+	}
+
+	private void createTable() {
 		Vector<String> columNames = new Vector<String>(2);
-		columNames.add("Attribute");
-		columNames.add("Value");
+		columNames.add( Lang.get("table-attribute"));
+		columNames.add( Lang.get("table-value") );
 		Vector<Vector<String>> data = new Vector<Vector<String>>(5);
 		for (int i = 0; i < 5; i++) {
 			Vector<String> item = new Vector<String>(2);
@@ -149,25 +167,7 @@ public class TitleArchitectureFile extends JFrame {
 			data.add(item);
 		}
 		editTable = new JTable(new MyDefaultTableModel(data, columNames));
-		editTable.getModel().addTableModelListener(new TableListener());
-		leftPanel.add(new JScrollPane(editTable), new GridBagConstraints(0, 4, 1, 1, 1, 1, GridBagConstraints.CENTER,
-				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-
-		saveButton = new JButton("Save");
-		saveButton.addActionListener(buttonListener);
-		leftPanel.add(saveButton, new GridBagConstraints(0, 5, 1, 1, 0, 0, GridBagConstraints.SOUTHEAST,
-				GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-
-		add(leftPanel);
-		// add(leftPanel, new GridBagConstraints(1, 0, 1, 1, 0, 1,
-		// GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-		// new Insets(0, 0, 0, 0), 0, 0));
-
-		setSize(new Dimension(650, 700));
-		setVisible(true);
-		setLocationRelativeTo(null);
-
-		setCurrentPath(null);
+		editTable.getModel().addTableModelListener(this);
 	}
 
 	private void addElement(String tagName, Attr... attrs) {
@@ -238,7 +238,7 @@ public class TitleArchitectureFile extends JFrame {
 		}
 		// if not null the get the new current path leaf node
 		MyTreeNode leaf = (MyTreeNode) curPath.getLastPathComponent();
-		Node node = (Node) leaf.getUserObject();
+		Element node = (Element) leaf.getUserObject();
 		// Change add buttons enable stage
 		leaf.getParent();
 		delButton.setEnabled(leaf.getParent() != null);
@@ -282,17 +282,17 @@ public class TitleArchitectureFile extends JFrame {
 		ignorTableValueChange = false;
 	}
 
-	private void setTableValue(Node node) {
-		Node temp = null;
+	private void setTableValue(Element node) {
 		int count = 0;
 		String attrs[] = new String[] { "name", "data", "unit", "title", "colum" };
 		TableModel model = editTable.getModel();
 		ignorTableValueChange = true;
 		for (int i = 0; i < attrs.length; i++) {
-			temp = node.getAttributes().getNamedItem(attrs[i]);
-			if (null != temp) {
-				model.setValueAt(attrs[i], count, 0);
-				model.setValueAt(temp.getTextContent(), count, 1);
+			String value = node.getAttribute(attrs[i]); 
+			
+			if (!value.trim().equals("") ) {
+				model.setValueAt( attrs[i], count, 0);
+				model.setValueAt( value, count, 1);
 				count++;
 			}
 		}
@@ -330,134 +330,6 @@ public class TitleArchitectureFile extends JFrame {
 		new TitleArchitectureFile("tree/major.xml", null);
 	}
 
-	class JTreeListener implements MouseListener {
-		@Override
-		public void mousePressed(MouseEvent e) {
-			JTree source = (JTree) e.getSource();
-			TreePath path = source.getPathForLocation(e.getX(), e.getY());
-			if (null != path) {
-				setCurrentPath(path);
-			}
-		}
-
-		@Override
-		public void mouseClicked(MouseEvent e) {
-		}
-
-		@Override
-		public void mouseReleased(MouseEvent e) {
-		}
-
-		@Override
-		public void mouseEntered(MouseEvent e) {
-		}
-
-		@Override
-		public void mouseExited(MouseEvent e) {
-		}
-
-	}
-
-	class TableListener implements TableModelListener {
-
-		@Override
-		public void tableChanged(TableModelEvent e) {
-			if (ignorTableValueChange)
-				return;
-			if (!editTable.isCellEditable(e.getFirstRow(), e.getColumn()))
-				return;
-			if (null == curPath)
-				return;
-			TableModel model = editTable.getModel();
-			String attr = model.getValueAt(e.getFirstRow(), e.getColumn() - 1).toString();
-			System.out.println(attr);
-			String changedValue = model.getValueAt(e.getFirstRow(), e.getColumn()).toString();
-			changedValue = changedValue.trim();
-
-			// data,title,column requires number value
-			if (attr.equals("data") || attr.equals("title") || attr.equals("colum") || attr.equals("unit")) {
-
-				try {
-					Integer.parseInt(changedValue);
-				} catch (Exception ex) {
-					JOptionPane.showMessageDialog(null, "Integer value");
-					model.setValueAt("0", e.getFirstRow(), e.getColumn());
-				}
-			}
-
-			// if is title then read the column title
-			if (attr.equals("title")) {
-				String sheetName = readTableValue("name");
-				String title = readTableValue("title");
-				String unit = readTableValue("unit");
-				try {
-					DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) curPath.getLastPathComponent();
-					treeNode.removeAllChildren();
-					readTitle(sheetName, Integer.parseInt(title), Integer.parseInt(unit));
-				} catch (Exception e1) {
-					JOptionPane.showMessageDialog(null, e1.getMessage());
-				}
-			}
-
-			// change value on xml element
-			DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) curPath.getLastPathComponent();
-			Element docNode = (Element) treeNode.getUserObject();
-			docNode.setAttribute(attr, changedValue);
-			tree.updateUI();
-		}
-
-	}
-
-	class ButtonsListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			AbstractButton button = (AbstractButton) e.getSource();
-			System.out.println("click button" + button.getText());
-
-			switch (button.getText().trim()) {
-			case "Remove":
-				if (null == curPath)
-					return;
-				MyTreeNode leaf = (MyTreeNode) curPath.getLastPathComponent();
-				if (leaf.getParent() == null)
-					return;
-				MyTreeNode parent = (MyTreeNode) leaf.getParent();
-				Node docChild = (Node) leaf.getUserObject();
-				Node docParent = (Node) parent.getUserObject();
-				if (parent != null) {
-					parent.remove(leaf);
-					docParent.removeChild(docChild);
-					setCurrentPath(null);
-					tree.updateUI();
-				}
-				break;
-			case "Sheet":
-				addElement("sheet");
-				break;
-			case "Columns":
-				addElement("merg");
-				break;
-			case "Column":
-				addElement("field");
-				break;
-			case "Save":
-				DefaultMutableTreeNode treeRoot = (DefaultMutableTreeNode) tree.getModel().getRoot();
-				if (null == treeRoot)
-					break;
-				Node docNode = (Node) treeRoot.getUserObject();
-				if (!format(docNode.getOwnerDocument()))
-					break;
-				File file = utils.Utils.saveXML(docNode.getOwnerDocument());
-				new AttributeMappingFile(file);
-				frame.dispose();
-				break;
-			default:
-				return;
-			}
-		}
-
-	}
 
 	public void dispose() {
 		try {
@@ -480,4 +352,128 @@ public class TitleArchitectureFile extends JFrame {
 		}
 		return model.getValueAt(index, 1).toString();
 	}
+
+	
+	@Override
+	public void mousePressed(MouseEvent e) {
+		JTree source = (JTree) e.getSource();
+		TreePath path = source.getPathForLocation(e.getX(), e.getY());
+		if (null != path) {
+			setCurrentPath(path);
+		}
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+	}
+	
+	@Override
+	public void tableChanged(TableModelEvent e) {
+		if (ignorTableValueChange)
+			return;
+		if (!editTable.isCellEditable(e.getFirstRow(), e.getColumn()))
+			return;
+		if (null == curPath)
+			return;
+		TableModel model = editTable.getModel();
+		String attr = model.getValueAt(e.getFirstRow(), e.getColumn() - 1).toString();
+		System.out.println(attr);
+		String changedValue = model.getValueAt(e.getFirstRow(), e.getColumn()).toString();
+		changedValue = changedValue.trim();
+
+		
+		// data,title,column requires number value
+		if (attr.equals("data") || attr.equals("title") || attr.equals("colum") || attr.equals("unit")) {
+
+			try {
+				Integer.parseInt(changedValue);
+			} catch (Exception ex) {
+				JOptionPane.showMessageDialog(null, "Integer value");
+				model.setValueAt("0", e.getFirstRow(), e.getColumn());
+			}
+		}
+
+		// if is title then read the column title
+		if (attr.equals("title")) {
+			String sheetName = readTableValue("name");
+			String title = readTableValue("title");
+			String unit = readTableValue("unit");
+			try {
+				DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) curPath.getLastPathComponent();
+				treeNode.removeAllChildren();
+				readTitle(sheetName, Integer.parseInt(title), Integer.parseInt(unit));
+			} catch (Exception e1) {
+				JOptionPane.showMessageDialog(null, e1.getMessage());
+			}
+		}
+
+		// change value on xml element
+		DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) curPath.getLastPathComponent();
+		Element docNode = (Element) treeNode.getUserObject();
+		docNode.setAttribute(attr, changedValue);
+		tree.updateUI();
+	}
+
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		MyButton button = (MyButton) e.getSource();
+		System.out.println("click button" + button.getId() );
+
+		switch (button.getId() ) {
+		case "button-remove":
+			if (null == curPath)
+				return;
+			MyTreeNode leaf = (MyTreeNode) curPath.getLastPathComponent();
+			if (leaf.getParent() == null)
+				return;
+			MyTreeNode parent = (MyTreeNode) leaf.getParent();
+			Node docChild = (Node) leaf.getUserObject();
+			Node docParent = (Node) parent.getUserObject();
+			if (parent != null) {
+				parent.remove(leaf);
+				docParent.removeChild(docChild);
+				setCurrentPath(null);
+				tree.updateUI();
+			}
+			break;
+		case "button-sheet":
+			addElement("sheet");
+			break;
+		case "button-columns":
+			addElement("merg");
+			break;
+		case "button-column":
+			addElement("field");
+			break;
+		case "button-save":
+			DefaultMutableTreeNode treeRoot = (DefaultMutableTreeNode) tree.getModel().getRoot();
+			if (null == treeRoot)
+				break;
+			Node docNode = (Node) treeRoot.getUserObject();
+			if (!format(docNode.getOwnerDocument()))
+				break;
+			File file = utils.Utils.saveXML(docNode.getOwnerDocument());
+			if( null != file ){
+				new AttributeMappingFile(file);
+			}
+			dispose();
+			break;
+		default:
+			return;
+		}
+	}
+
 }

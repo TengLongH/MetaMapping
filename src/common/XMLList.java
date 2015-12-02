@@ -16,9 +16,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-import javax.swing.AbstractButton;
 import javax.swing.DefaultListModel;
-import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JList;
@@ -37,18 +35,18 @@ implements ActionListener, WindowListener, Watcher{
 	private DefaultListModel<String> model;
 	private JList<String> list;
 	
-	private JButton editButton;
-	private JButton importButton;
-	private JButton createButton;
-	private JButton removeButton;
-	private JButton saveButton;
+	private MyButton editButton;
+	private MyButton importButton;
+	private MyButton createButton;
+	private MyButton removeButton;
+	private MyButton saveButton;
 	
 	private JFileChooser xmlChooser ;
 	
 	private File excel;
 	public XMLList( File excel ){
 		this.excel = excel;
-		setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+		//setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		updateList();
 		add( new JScrollPane( list )  );
 		
@@ -57,19 +55,19 @@ implements ActionListener, WindowListener, Watcher{
 		lay.setAlignment(FlowLayout.RIGHT);
 		bar.setLayout(lay);
 		bar.setMargin(new Insets(0, 10, 0, 0));
-		createButton = new JButton("Create");
+		createButton = new MyButton("button-create");
 		createButton.addActionListener(this);
 		bar.add(createButton);
-		importButton = new JButton("Import");
+		importButton = new MyButton("button-import");
 		importButton.addActionListener(this);
 		bar.add(importButton);
-		editButton = new JButton("Edit");
+		editButton = new MyButton("button-edit");
 		editButton.addActionListener(this);
 		bar.add(editButton);
-		removeButton = new JButton("Remove");
+		removeButton = new MyButton("button-remove");
 		removeButton.addActionListener(this);
 		bar.add(removeButton);
-		saveButton = new JButton("Save");
+		saveButton = new MyButton("button-save");
 		saveButton.addActionListener(this);
 		bar.add(saveButton);
 		add( bar, BorderLayout.SOUTH );
@@ -114,21 +112,21 @@ implements ActionListener, WindowListener, Watcher{
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		AbstractButton button = (AbstractButton) e.getSource();
-		switch( button.getText()){
-		case "Edit":
+		MyButton button = (MyButton) e.getSource();
+		switch( button.getId()){
+		case "button-edit":
 			edit();
 			break;
-		case "Import":
+		case "button-import":
 			importXML();
 			break;
-		case "Create":
+		case "button-create":
 			new TitleArchitectureFile(excel);
 			break;
-		case "Remove":
+		case "button-remove":
 			remove();
 			break;
-		case "Save":
+		case "button-save":
 			this.dispose();
 			break;
 			default:

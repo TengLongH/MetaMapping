@@ -11,9 +11,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import javax.swing.AbstractButton;
 import javax.swing.DefaultListModel;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JMenuBar;
@@ -35,28 +33,27 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import common.FieldMapping;
+import common.MyButton;
 import common.MyTreeCellRender;
 import common.MyTreeNode;
+import utils.Lang;
 
 
-public class AttributeMappingFile extends JFrame {
+public class AttributeMappingFile extends JFrame 
+implements ActionListener, TreeSelectionListener{
 	
 	private static final long serialVersionUID = 1L;
 	private JTree templateTree;
 	private JTree sourceTree;
 	private JPanel btnPanel;
-	private JButton equalBtn;
+	private MyButton equalBtn;
 	
-	private ButtonHandler btnHandler;
 	private DefaultListModel<FieldMapping> model;
 	private JList<FieldMapping> mapList;
-	private JButton removeBtn;
-	private JButton saveBtn;
-	private JButton bigBtn;
-	private JButton smallBtn;
-	private JFrame frame;
-	
-	private TreeSelectHandler treeHandler;
+	private MyButton removeBtn;
+	private MyButton saveBtn;
+	private MyButton bigBtn;
+	private MyButton smallBtn;
 	private File file;
 	private Document doc ;
 	//源文件被选中节点在模板中的映射节点
@@ -64,12 +61,7 @@ public class AttributeMappingFile extends JFrame {
 	
  	public AttributeMappingFile( File file){
 		super("Metadata Mapping");
-		setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-		this.frame = this;
-		
-		btnHandler = new ButtonHandler();
-		treeHandler = new TreeSelectHandler();
-		
+		//setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		this.setLayout( new GridBagLayout() );
 		this.file = file;
 		try {
@@ -83,7 +75,7 @@ public class AttributeMappingFile extends JFrame {
 		}
 		MyTreeCellRender render = new MyTreeCellRender();
 		templateTree.setCellRenderer(render);
-		templateTree.addTreeSelectionListener(treeHandler);
+		templateTree.addTreeSelectionListener(this);
 		templateTree.getSelectionModel().setSelectionMode(
 				TreeSelectionModel.SINGLE_TREE_SELECTION);
 		JScrollPane templatePane = new JScrollPane( templateTree );
@@ -100,22 +92,22 @@ public class AttributeMappingFile extends JFrame {
 			return ;
 		}
 		sourceTree.setCellRenderer(render);
-		sourceTree.addTreeSelectionListener(treeHandler);
+		sourceTree.addTreeSelectionListener(this);
 		sourceTree.getSelectionModel().setSelectionMode(
 				TreeSelectionModel.SINGLE_TREE_SELECTION);
 		JScrollPane sourcePane = new JScrollPane(sourceTree);
 		
 		btnPanel = new JPanel();
 		btnPanel.setLayout(new GridBagLayout() );
-		equalBtn = new JButton("=");
-		equalBtn.setToolTipText("equals");
-		equalBtn.addActionListener(btnHandler);
-		bigBtn = new JButton(">");
-		bigBtn.setToolTipText("superclass");
-		bigBtn.addActionListener(btnHandler);
-		smallBtn = new JButton("<");
-		smallBtn.setToolTipText("subclass");
-		smallBtn.addActionListener(btnHandler);
+		equalBtn = new MyButton("button-equal");
+		equalBtn.setToolTipText(Lang.get("button-equal-tip"));
+		equalBtn.addActionListener(this);
+		bigBtn = new MyButton("button-more");
+		bigBtn.setToolTipText(Lang.get("button-more-tip"));
+		bigBtn.addActionListener(this);
+		smallBtn = new MyButton("button-less");
+		smallBtn.setToolTipText(Lang.get("button-less-tip"));
+		smallBtn.addActionListener(this);
 		btnPanel.add( new JPanel(), new GridBagConstraints( 0, 0, 100, 40, 1, 1,
 				GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0),
 				0 , 0 ));
@@ -162,10 +154,10 @@ public class AttributeMappingFile extends JFrame {
 		mapList = new JList<FieldMapping>(model);
 		initMapList();
 		JScrollPane mapPane = new JScrollPane(mapList);
-		removeBtn = new JButton("Remove");
-		removeBtn.addActionListener(btnHandler);
-		saveBtn = new JButton("Save");
-		saveBtn.addActionListener(btnHandler);
+		removeBtn = new MyButton("button-remove");
+		removeBtn.addActionListener(this);
+		saveBtn = new MyButton("button-save");
+		saveBtn.addActionListener(this);
 		JMenuBar btnsBar = new JMenuBar();
 		FlowLayout btnsBarlayout = new FlowLayout();
 		btnsBarlayout.setAlignment(FlowLayout.CENTER);
@@ -233,83 +225,38 @@ public class AttributeMappingFile extends JFrame {
 		sourceTree.updateUI();
 	}
 	
-	class ButtonHandler implements ActionListener{
-		public void actionPerformed(ActionEvent e) {
-			AbstractButton btn = (AbstractButton) e.getSource();
-			System.out.println( btn.getText() );
-			switch( btn.getText() ){
-			case "=":
-				addMapItem("=");
+	private void markMapItem(DefaultMutableTreeNode treeNode) {
+		Element docNode = (Element) treeNode.getUserObject();
+		String mapping = docNode.getAttribute("mapping").trim();
+		if( mapping.equals("") )return ;
+		String path = utils.Utils.elementPathToString(docNode);
+		
+		for( int i = 0; i < model.getSize(); i++ ){
+			FieldMapping fm = model.get(i);
+			if(fm.keyString().equals(path) ){
+				mapList.setSelectedIndex(i);
+				mapList.ensureIndexIsVisible(i);
 				break;
-			case "<":
-				addMapItem("<");
-				break;
-			case ">":
-				addMapItem(">");
-				break;
-			case "Remove":
-				removeMapItem();
-				break;
-			case "Save":
-				utils.Utils.saveXML( doc , file);
-				
-				frame.dispose();
-				break;
-			default:
 			}
 		}
+	}
 
-		
+	private void markMappedNode(DefaultMutableTreeNode treeNode) {
+		for( int i = 0; i < mappedNode.size(); i++ ){
+			mappedNode.get(i).setMappedNode(false);
+		}
+		mappedNode.clear();
+		Element docNode = (Element) treeNode.getUserObject();
+		String mapping = docNode.getAttribute("mapping").trim();
+		if( !mapping.equals("") ){
+			ArrayList<MyTreeNode> nodes = getTreeNodeByPath(templateTree,mapping);
+			templateTree.scrollPathToVisible(new TreePath( nodes.toArray()));
+			MyTreeNode last = nodes.get(nodes.size()-1);
+			last.setMappedNode(true);
+			mappedNode.add(last);
+		}
 	}
 	
-	class TreeSelectHandler implements TreeSelectionListener{
-
-		@Override
-		public void valueChanged(TreeSelectionEvent e) {
-			
-			JTree select = (JTree) e.getSource();
-			if( select == templateTree )return ;
-			DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) 
-					select.getLastSelectedPathComponent();
-			if( null == treeNode )return ;
-			markMappedNode(treeNode);
-			markMapItem( treeNode );
-			templateTree.updateUI();
-		}
-
-		private void markMapItem(DefaultMutableTreeNode treeNode) {
-			Element docNode = (Element) treeNode.getUserObject();
-			String mapping = docNode.getAttribute("mapping").trim();
-			if( mapping.equals("") )return ;
-			String path = utils.Utils.elementPathToString(docNode);
-			
-			for( int i = 0; i < model.getSize(); i++ ){
-				FieldMapping fm = model.get(i);
-				if(fm.keyString().equals(path) ){
-					mapList.setSelectedIndex(i);
-					mapList.ensureIndexIsVisible(i);
-					break;
-				}
-			}
-		}
-
-		private void markMappedNode(DefaultMutableTreeNode treeNode) {
-			for( int i = 0; i < mappedNode.size(); i++ ){
-				mappedNode.get(i).setMappedNode(false);
-			}
-			mappedNode.clear();
-			Element docNode = (Element) treeNode.getUserObject();
-			String mapping = docNode.getAttribute("mapping").trim();
-			if( !mapping.equals("") ){
-				ArrayList<MyTreeNode> nodes = getTreeNodeByPath(templateTree,mapping);
-				templateTree.scrollPathToVisible(new TreePath( nodes.toArray()));
-				MyTreeNode last = nodes.get(nodes.size()-1);
-				last.setMappedNode(true);
-				mappedNode.add(last);
-			}
-		}
-		
-	} 
 	private void addMapItem(String relation){
 		MyTreeNode s= (MyTreeNode) sourceTree.getLastSelectedPathComponent();
 		MyTreeNode t= (MyTreeNode) templateTree.getLastSelectedPathComponent();
@@ -385,5 +332,42 @@ public class AttributeMappingFile extends JFrame {
 	}
 	public static void main( String[] args ){
 		new AttributeMappingFile(new File("tree/major.xml"));
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		MyButton btn = (MyButton) e.getSource();
+		System.out.println( btn.getId() );
+		switch( btn.getId() ){
+		case "button-equal":
+			addMapItem("=");
+			break;
+		case "button-less":
+			addMapItem("<");
+			break;
+		case "button-more":
+			addMapItem(">");
+			break;
+		case "button-remove":
+			removeMapItem();
+			break;
+		case "button-save":
+			utils.Utils.saveXML( doc , file);
+			this.dispose();
+			break;
+		default:
+		}
+	}
+	@Override
+	public void valueChanged(TreeSelectionEvent e) {
+		
+		JTree select = (JTree) e.getSource();
+		if( select == templateTree )return ;
+		DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) 
+				select.getLastSelectedPathComponent();
+		if( null == treeNode )return ;
+		markMappedNode(treeNode);
+		markMapItem( treeNode );
+		templateTree.updateUI();
 	}
 }
