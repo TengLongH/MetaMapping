@@ -51,10 +51,10 @@ public class MyTreeCellRender  extends DefaultTreeCellRenderer {
 			if( !e.getAttribute("mapping").trim().equals("") ){
 				setForeground(Color.BLUE);
 			}
-			if( node.isMappedNode() ){
+			if( node.isMap() ){
 				setForeground(Color.BLUE );
 			}
-			if( node.isMatched() ){
+			if( node.isSynonyms() ){
 				setForeground( new Color( 205,85,85));
 			}
 			break;

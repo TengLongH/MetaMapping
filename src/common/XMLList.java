@@ -135,7 +135,7 @@ implements ActionListener, WindowListener, Watcher{
 	private void edit() {
 		String fileName = list.getSelectedValue();
 		if( null == fileName )return ;
-		new TitleArchitectureFile("tree/" + fileName, excel );
+		new TitleArchitectureFile("tree/" + fileName, null );
 	}
 	private void importXML() {
 		int value = xmlChooser.showOpenDialog(this);

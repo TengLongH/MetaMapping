@@ -42,6 +42,34 @@ public class Utils {
 		
 	}
 	
+	public static List<MyTreeNode> getLeafs( MyTreeNode root ){
+		List<MyTreeNode> leaves = new ArrayList<MyTreeNode>();
+		List<MyTreeNode> branches = new ArrayList<MyTreeNode>();
+		branches.add(root);
+		while( !branches.isEmpty() ){
+			MyTreeNode b = branches.remove(0);
+			for( int i = 0; i < b.getChildCount(); i++ ){
+				MyTreeNode node = (MyTreeNode) b.getChildAt(i);
+				if( node.isLeaf() ){
+					leaves.add( node );
+				}else{
+					branches.add( node );
+				}
+			}
+		}
+		
+		return leaves;
+	}
+	
+	public static String getFileName( String name ){
+		try{
+			int index = name.lastIndexOf('.');
+			return name.substring(0, index);
+		}catch( Exception e){
+			return "";
+		}
+	}
+	
 	public static String getCellStringValue( Cell cell ){
 		if( null == cell )return null;
 		switch( cell.getCellType() ){
@@ -89,22 +117,22 @@ public class Utils {
 		return null;
 	}
 	
-	public static File saveXML(Document doc ) {
+	public static File saveXML(Document doc, String defName ) {
 		File file = null;
 		int value = 0;
 		boolean cancel = false;
 		String name = null;
 		StringBuffer fileName = new StringBuffer();
-		String message = "please input the file name";
+		String message = Lang.get("message1");
 		while( !cancel ){
 			fileName.delete(0, fileName.length());
-			name = JOptionPane.showInputDialog( message );
+			name = JOptionPane.showInputDialog( message, defName );
 			if( null == name ){
 				cancel = true;
 				break;
 			}
 			if( name.startsWith("#") ){
-				message = name + " is unvalidate please input again";
+				message = Lang.get("message2");
 				continue;
 			}
 			fileName.append("tree");
@@ -116,7 +144,7 @@ public class Utils {
 			file = new File( fileName.toString() );
 			if( file.exists() ){
 				value = JOptionPane.showConfirmDialog(null, 
-					name + " has exists do you want to replace it?",
+					Lang.get("message3"),
 					"Confirm", JOptionPane.YES_NO_OPTION);
 				if( JOptionPane.YES_OPTION == value )break;
 			}else{
@@ -124,7 +152,7 @@ public class Utils {
 					file.createNewFile();
 					break;
 				} catch (IOException e) {
-					message = name + " is unvalidate please input again";
+					message = Lang.get("message2");
 					continue;
 				}
 			}
@@ -142,7 +170,7 @@ public class Utils {
 			StreamResult result = new StreamResult(file);
 			transformer.transform(source, result);
 		} catch ( TransformerException e) {
-			JOptionPane.showMessageDialog(null, "save xml file failed, the file format is error");
+			JOptionPane.showMessageDialog(null, Lang.get("err1"));
 			e.printStackTrace();
 		}
 		return file;
@@ -155,7 +183,7 @@ public class Utils {
 			StreamResult result = new StreamResult(System.out);
 			transformer.transform(source, result);
 		} catch ( TransformerException e) {
-			JOptionPane.showMessageDialog(null, "save xml file failed, the file format is error");
+			JOptionPane.showMessageDialog(null, Lang.get("err1"));
 			e.printStackTrace();
 		}
 		

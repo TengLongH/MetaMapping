@@ -169,6 +169,7 @@ public class Main extends JFrame implements ActionListener, Watcher{
 		if( value == JFileChooser.APPROVE_OPTION ){
 			source = sourceChooser.getSelectedFile();
 			sourceField.setText(source.getAbsolutePath());
+			System.out.println( "Select Excel:" + source.getName() );
 		}
 	}
 	@Override

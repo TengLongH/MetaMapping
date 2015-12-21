@@ -9,8 +9,8 @@ public class MyTreeNode extends DefaultMutableTreeNode{
 
 	private static final long serialVersionUID = 1L;
 
-	private boolean mappedNode;
-	private boolean matched;
+	private boolean map;
+	private boolean synonyms;
 	
 	
 	public MyTreeNode(Object userObject) {
@@ -27,25 +27,27 @@ public class MyTreeNode extends DefaultMutableTreeNode{
 		//buf.append( Lang.get(name, name) );
 		buf.append( name );
 		if( !node.getAttribute("colum").trim().equals("") ){
-			buf.append(":");
+			buf.append(",");
+			buf.append(" col:");
 			buf.append(node.getAttribute("colum"));
 		}
 		return buf.toString();
 	}
 
-	public boolean isMappedNode() {
-		return mappedNode;
+	public boolean isMap() {
+		return map;
 	}
 
-	public void setMappedNode(boolean mappedNode) {
-		this.mappedNode = mappedNode;
-	}
-	public boolean isMatched() {
-		return matched;
+	public void setMap(boolean mappedNode) {
+		this.map = mappedNode;
 	}
 
-	public void setMatched(boolean matched) {
-		this.matched = matched;
+	public boolean isSynonyms() {
+		return synonyms;
 	}
 
+	public void setSynonyms(boolean synonyms) {
+		this.synonyms = synonyms;
+	}
+	
 }

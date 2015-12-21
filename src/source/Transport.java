@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import javax.swing.JOptionPane;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -22,6 +24,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import common.ColumnMapping;
+import utils.Lang;
 import utils.Template;
 
 public class Transport {
@@ -33,11 +36,12 @@ public class Transport {
 	private String preSheetName;
 	private Row curRow;
 
+	private List<Integer> testInfo = new ArrayList<Integer>();
 	private List<ColumnMapping> map = new ArrayList<ColumnMapping>() ;
 
 	public Transport(File source, File descript) {
 		try {
-			String name = "temp.xls";
+			String name = "Transport.xls";
 			name += source.getName().endsWith("xls") ? "" : "x";
 			Path temp = Paths.get("tree", "sys", name );
 			if( Files.exists(temp) )Files.delete(temp);
@@ -97,7 +101,9 @@ public class Transport {
 				}
 			}
 			if( stationNo < 0 || sampleType < 0){
-				throw new Exception("can't find stationNo or sampleNo");
+				JOptionPane.showMessageDialog( 
+						null, Lang.get("warning1"),Lang.get("warning"), JOptionPane.WARNING_MESSAGE );
+				return ;
 			}
 			startRow = Integer.parseInt(xmlSheet.getAttribute("data"));
 			for (int i = startRow; i <= sheet.getLastRowNum(); i++) {
@@ -110,7 +116,7 @@ public class Transport {
 		}
 	}
 
-	private void transformRow(Row row, int stationNo, int sampleType) {
+	private void transformRow(Row row, int stationNo, int sampleType ) {
 		String station = null;
 		String type = null;
 		String sampleNo = null;
@@ -226,6 +232,7 @@ public class Transport {
 	private void parseSheetMapping(Element xmlSheet) {
 
 		map.clear();
+		testInfo.clear();
 		String mapping = null;
 		List<String> path = null;
 		String sheetName = null;
@@ -241,11 +248,23 @@ public class Transport {
 					continue;
 				
 				mapping = mapping.substring(2).trim();
+				//获取映射节点的路径
 				path = new ArrayList<String>(Arrays.asList(mapping.split(">")));
 				path.remove(0);
 				sheetName = path.get(0);
-				String strColumn = Template.get(path.toArray(), "colum");
+				
+				//-------------------------------------
+				//String strColumn = Template.get(path.toArray(), "colum");
+				Element element = Template.getElement(path.toArray());
+				String strColumn = element.getAttribute("colum");
+				String type = element.getAttribute("type");
+				
+				//-----------------------------------------------------
 				columnIndex = Integer.parseInt(strColumn);
+				if( type.equals("TestInfo")){
+					testInfo.add(srcIndex );
+				}
+				//源数据文件中该列的路径，添加进Extra表时会用到
 				String srcPath = utils.Utils.elementPathToString(column);
 				map .add( new ColumnMapping(srcPath, srcIndex, columnIndex, sheetName));
 			}

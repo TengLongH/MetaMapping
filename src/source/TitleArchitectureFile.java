@@ -9,10 +9,20 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.UUID;
 import java.util.Vector;
 
 import javax.swing.JFrame;
@@ -46,7 +56,7 @@ import common.MyTreeNode;
 import utils.Lang;
 
 public class TitleArchitectureFile extends JFrame
-implements ActionListener, TableModelListener, MouseListener{
+implements ActionListener, TableModelListener, MouseListener, WindowListener{
 
 	private static final long serialVersionUID = 1L;
 
@@ -67,27 +77,23 @@ implements ActionListener, TableModelListener, MouseListener{
 	private TreePath curPath;
 
 	private Workbook book;
+	private File excel;
 
-
+	private String defName="";
+	
+	private int tableRow = 0;
+	
 	public TitleArchitectureFile(File excel) {
 		this("tree/sys/blankSourceTree.xml", excel);
 	}
 
 	public TitleArchitectureFile(String xml, File excel) {
-		super("Analysis Title");
-		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		// setLayout(new GridBagLayout());
+		super( Lang.get("metadata") );
+		
+		this.addWindowListener(this);
 		setLayout(new GridLayout(1, 2));
 		this.sourceFile = new File(xml);
-		System.out.println(sourceFile.exists());
-
-		try {
-			this.book = WorkbookFactory.create(excel);
-		} catch (Exception e) {
-			// e.printStackTrace();
-			this.book = null;
-		}
-
+		setExcel(excel);
 		try {
 			tree = new JTree(utils.Utils.createTree(sourceFile.getAbsolutePath()));
 			tree.setLargeModel(true);
@@ -104,10 +110,7 @@ implements ActionListener, TableModelListener, MouseListener{
 		tree.addMouseListener( this );
 
 		add(new JScrollPane(tree));
-		// add(new JScrollPane(tree), new GridBagConstraints(0, 0, 1, 1, 1, 1,
-		// GridBagConstraints.CENTER,
-		// GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-
+	
 		JPanel leftPanel = new JPanel();
 		leftPanel.setLayout(new GridBagLayout());
 		delButton = new MyButton("button-remove");
@@ -151,8 +154,75 @@ implements ActionListener, TableModelListener, MouseListener{
 		setSize(new Dimension(650, 700));
 		setVisible(true);
 		setLocationRelativeTo(null);
+		
+		openExcel();
 
 		setCurrentPath(null);
+	}
+
+	
+	private void setExcel(File inExcel) {
+		if( null == inExcel || !inExcel.exists() ){
+			this.excel = null;
+			return ;
+		}
+		int index = inExcel.getName().lastIndexOf('.');
+		String suffix = inExcel.getName().substring(index);
+		this.defName = inExcel.getName().substring(0, index);
+		String name =  UUID.randomUUID() + suffix;
+		Path path = Paths.get("tree","sys", "temp", name );
+		this.excel = path.toFile();
+		InputStream in = null;
+		try {
+			in = new FileInputStream(inExcel);
+			Files.copy(in, path );
+		} catch ( Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(
+					this, Lang.get("warning2"),
+					Lang.get("warning"), JOptionPane.WARNING_MESSAGE);
+		}finally{
+			try{
+				if( null != in )in.close();
+			}catch( Exception e){}
+		}
+	}
+
+	private void openExcel(){
+		try {
+			if( null != excel ){
+				this.book = WorkbookFactory.create(this.excel);
+				initTree( this.defName );
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void closeExcel(){
+		System.out.println("close excel file");
+		try {
+			if( null != book )book.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		try{
+			if( null != excel )this.excel.delete();
+		}catch( Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+	
+	private void initTree( String excelName ) {
+		MyTreeNode root = (MyTreeNode) tree.getModel().getRoot();
+		Element source = (Element) root.getUserObject();
+		source.setAttribute("name", excelName);
+		curPath = new TreePath(new Object[]{root} );
+		for( Sheet sheet : this.book ){
+			addElement("sheet", new Attr( "name", sheet.getSheetName() ));
+		}
+		curPath = null;
 	}
 
 	private void createTable() {
@@ -279,6 +349,7 @@ implements ActionListener, TableModelListener, MouseListener{
 			model.setValueAt("", i, 0);
 			model.setValueAt("", i, 1);
 		}
+		tableRow = 0;
 		ignorTableValueChange = false;
 	}
 
@@ -296,6 +367,7 @@ implements ActionListener, TableModelListener, MouseListener{
 				count++;
 			}
 		}
+		tableRow = count - 1;
 		ignorTableValueChange = false;
 	}
 
@@ -332,12 +404,8 @@ implements ActionListener, TableModelListener, MouseListener{
 
 
 	public void dispose() {
-		try {
-			if( null != book )book.close();
-		} catch (IOException e) {}
-		finally{
-			super.dispose();
-		}
+		closeExcel();
+		super.dispose();
 	}
 
 	public String readTableValue(String attr) {
@@ -381,29 +449,24 @@ implements ActionListener, TableModelListener, MouseListener{
 	
 	@Override
 	public void tableChanged(TableModelEvent e) {
+		System.out.println( e.getFirstRow() + ":" + tableRow );
 		if (ignorTableValueChange)
 			return;
 		if (!editTable.isCellEditable(e.getFirstRow(), e.getColumn()))
 			return;
+		
 		if (null == curPath)
 			return;
+		
+		
 		TableModel model = editTable.getModel();
+		if( e.getFirstRow() > tableRow ){
+			return ;
+		}
 		String attr = model.getValueAt(e.getFirstRow(), e.getColumn() - 1).toString();
-		System.out.println(attr);
+		
 		String changedValue = model.getValueAt(e.getFirstRow(), e.getColumn()).toString();
 		changedValue = changedValue.trim();
-
-		
-		// data,title,column requires number value
-		if (attr.equals("data") || attr.equals("title") || attr.equals("colum") || attr.equals("unit")) {
-
-			try {
-				Integer.parseInt(changedValue);
-			} catch (Exception ex) {
-				JOptionPane.showMessageDialog(null, "Integer value");
-				model.setValueAt("0", e.getFirstRow(), e.getColumn());
-			}
-		}
 
 		// if is title then read the column title
 		if (attr.equals("title")) {
@@ -427,6 +490,18 @@ implements ActionListener, TableModelListener, MouseListener{
 	}
 
 
+	private File saveXMLFile(){
+		DefaultMutableTreeNode treeRoot = (DefaultMutableTreeNode) tree.getModel().getRoot();
+		if (null == treeRoot)return null;
+		Node docNode = (Node) treeRoot.getUserObject();
+		if (!format(docNode.getOwnerDocument()))return null;
+		if( this.defName.equals("") )
+			defName = utils.Utils.getFileName(this.sourceFile.getName());
+		if( this.defName.equals("") )
+			defName = "descript";
+		File file = utils.Utils.saveXML(docNode.getOwnerDocument(), this.defName );
+		return file;
+	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		MyButton button = (MyButton) e.getSource();
@@ -459,13 +534,7 @@ implements ActionListener, TableModelListener, MouseListener{
 			addElement("field");
 			break;
 		case "button-save":
-			DefaultMutableTreeNode treeRoot = (DefaultMutableTreeNode) tree.getModel().getRoot();
-			if (null == treeRoot)
-				break;
-			Node docNode = (Node) treeRoot.getUserObject();
-			if (!format(docNode.getOwnerDocument()))
-				break;
-			File file = utils.Utils.saveXML(docNode.getOwnerDocument());
+			File file = saveXMLFile();
 			if( null != file ){
 				new AttributeMappingFile(file);
 			}
@@ -475,5 +544,28 @@ implements ActionListener, TableModelListener, MouseListener{
 			return;
 		}
 	}
+	
+	@Override
+	public void windowClosing(WindowEvent e) {
+		dispose();
+	}
+	
+	@Override
+	public void windowOpened(WindowEvent e) {}
+
+	@Override
+	public void windowClosed(WindowEvent e) {}
+
+	@Override
+	public void windowIconified(WindowEvent e) {}
+
+	@Override
+	public void windowDeiconified(WindowEvent e) {}
+
+	@Override
+	public void windowActivated(WindowEvent e) {}
+
+	@Override
+	public void windowDeactivated(WindowEvent e) {}
 
 }

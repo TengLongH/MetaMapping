@@ -45,6 +45,9 @@ public class Template {
 		return Utils.getAttribute(book, path, attri);
 	}
 
+	public static Element getElement( Object[] path ){
+		return Utils.getElementByPath(book, path);
+	}
 
 	public static int getSampleNo() {
 		return sampleNo;

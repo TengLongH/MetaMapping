@@ -11,6 +11,8 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
+
 import javax.swing.DefaultListModel;
 import javax.swing.JFrame;
 import javax.swing.JList;
@@ -37,6 +39,7 @@ import common.MyButton;
 import common.MyTreeCellRender;
 import common.MyTreeNode;
 import utils.Lang;
+import utils.Synonyms;
 
 
 public class AttributeMappingFile extends JFrame 
@@ -56,8 +59,14 @@ implements ActionListener, TreeSelectionListener{
 	private MyButton smallBtn;
 	private File file;
 	private Document doc ;
+	
 	//源文件被选中节点在模板中的映射节点
 	private ArrayList<MyTreeNode> mappedNode = new ArrayList<MyTreeNode>();
+	private ArrayList<MyTreeNode> synonymsNode = new ArrayList<MyTreeNode>();
+	
+	List<MyTreeNode> pleaves;
+	List<MyTreeNode> sleaves;
+	private MyButton autoMapBtn;
 	
  	public AttributeMappingFile( File file){
 		super("Metadata Mapping");
@@ -68,6 +77,7 @@ implements ActionListener, TreeSelectionListener{
 			templateTree = new JTree( utils.Utils.createTree("tree/sys/templateTree.xml") );
 			templateTree.setLargeModel(true);
 			templateTree.setRowHeight(18);
+			
 		} catch (Exception e) {
 			System.out.println("Can't open templateTree.xml");
 			e.printStackTrace();
@@ -114,12 +124,12 @@ implements ActionListener, TreeSelectionListener{
 		btnPanel.add( equalBtn,     new GridBagConstraints( 0, 40, 100, 1, 1, 1,
 				GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 10, 0),
 				0 , 0 ));
-		btnPanel.add( smallBtn,     new GridBagConstraints( 0, 50, 100, 1, 1, 1,
-				GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 10, 0),
-				0 , 0 ));
-		btnPanel.add( bigBtn,     new GridBagConstraints( 0, 60, 100, 1, 1, 1,
-				GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 10, 0),
-				0 , 0 ));
+//		btnPanel.add( smallBtn,     new GridBagConstraints( 0, 50, 100, 1, 1, 1,
+//				GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 10, 0),
+//				0 , 0 ));
+//		btnPanel.add( bigBtn,     new GridBagConstraints( 0, 60, 100, 1, 1, 1,
+//				GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 10, 0),
+//				0 , 0 ));
 		btnPanel.add( new JPanel(), new GridBagConstraints( 0, 70, 100, 30, 1, 1,
 				GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0),
 				0 , 0 ));
@@ -158,12 +168,16 @@ implements ActionListener, TreeSelectionListener{
 		removeBtn.addActionListener(this);
 		saveBtn = new MyButton("button-save");
 		saveBtn.addActionListener(this);
+		autoMapBtn = new MyButton("button-automap");
+		autoMapBtn.addActionListener(this);
 		JMenuBar btnsBar = new JMenuBar();
 		FlowLayout btnsBarlayout = new FlowLayout();
 		btnsBarlayout.setAlignment(FlowLayout.CENTER);
 		btnsBar.setLayout(btnsBarlayout);
 		btnsBar.add(saveBtn);
 		btnsBar.add(removeBtn);
+		btnsBar.add( autoMapBtn );
+		
 		JPanel bottom = new JPanel();
 		bottom.setLayout( new BorderLayout() );
 		bottom.add(mapPane, BorderLayout.CENTER);
@@ -177,13 +191,10 @@ implements ActionListener, TreeSelectionListener{
 		setLocationRelativeTo(null);
 		setVisible(true);
 		
-		MyTreeNode r = (MyTreeNode) templateTree.getModel().getRoot();
-		MyTreeNode major = (MyTreeNode) r.getChildAt(2);
-		
-		System.out.println( major );
-		((MyTreeNode) major.getChildAt(10)).setMatched(true);
-		((MyTreeNode) major.getChildAt(11)).setMatched(true);
-		((MyTreeNode) major.getChildAt(12)).setMatched(true);	
+		MyTreeNode root = (MyTreeNode) templateTree.getModel().getRoot();
+		pleaves = utils.Utils.getLeafs( root );
+		root = (MyTreeNode) sourceTree.getModel().getRoot();
+		sleaves = utils.Utils.getLeafs( root );
 		
 	}
 	private void initMapList() {
@@ -217,10 +228,17 @@ implements ActionListener, TreeSelectionListener{
 		int index = mapList.getSelectedIndex();
 		if( index < 0 )return ;
 		FieldMapping item = model.remove(index);
-		MyTreeNode node = item.getKey();
-		node.setMappedNode(false);
-		Element element = (Element) node.getUserObject();
-		element.removeAttribute("mapping");
+		MyTreeNode keyNode = item.getKey();
+		MyTreeNode valNode = item.getValue();
+		keyNode.setMap(false);
+		Element keyEle = (Element) keyNode.getUserObject();
+		Element valEle = (Element) valNode.getUserObject();
+		String keyName = keyEle.getAttribute("name");
+		String valName = valEle.getAttribute("name");
+		if( !keyName.equals(valName) ){
+			Synonyms.remove(keyName, valName );
+		}
+		keyEle.removeAttribute("mapping");
 		System.out.println("remove: " + item.toString() );
 		sourceTree.updateUI();
 	}
@@ -241,28 +259,49 @@ implements ActionListener, TreeSelectionListener{
 		}
 	}
 
-	private void markMappedNode(DefaultMutableTreeNode treeNode) {
+	private void clearSynonymsMaker(){
+		for( int i = 0; i < synonymsNode.size(); i++ ){
+			synonymsNode.get(i).setSynonyms(false);
+		}
+		synonymsNode.clear();
+	}
+	private void clearMapMarker(){
 		for( int i = 0; i < mappedNode.size(); i++ ){
-			mappedNode.get(i).setMappedNode(false);
+			mappedNode.get(i).setMap(false);
 		}
 		mappedNode.clear();
+	}
+	private MyTreeNode getMapNode( MyTreeNode treeNode ){
 		Element docNode = (Element) treeNode.getUserObject();
 		String mapping = docNode.getAttribute("mapping").trim();
 		if( !mapping.equals("") ){
 			ArrayList<MyTreeNode> nodes = getTreeNodeByPath(templateTree,mapping);
 			templateTree.scrollPathToVisible(new TreePath( nodes.toArray()));
 			MyTreeNode last = nodes.get(nodes.size()-1);
-			last.setMappedNode(true);
-			mappedNode.add(last);
+			return last;
 		}
+		return null;
+	}
+	private void markMappedNode( MyTreeNode maped ) {
+		maped.setMap(true);
+		mappedNode.add(maped);
 	}
 	
 	private void addMapItem(String relation){
 		MyTreeNode s= (MyTreeNode) sourceTree.getLastSelectedPathComponent();
 		MyTreeNode t= (MyTreeNode) templateTree.getLastSelectedPathComponent();
+		addMapItem( s, relation, t );
+	}
+	private void addMapItem( MyTreeNode s, String relation, MyTreeNode t){
 		if( checkMapping( s, t ) ){
 			FieldMapping m = new FieldMapping( s , relation, t );
 			Element keyEle = (Element) s.getUserObject();
+			Element valEle = (Element) t.getUserObject();
+			String keyName = keyEle.getAttribute("name");
+			String valName = valEle.getAttribute("name");
+			if( !keyName.equals(valName) ){
+				Synonyms.add(keyName, valName);
+			}
 			keyEle.setAttribute("mapping",  m.mapString() );
 			for( int i = 0; i < model.size(); i++ ){
 				FieldMapping fm = model.getElementAt(i);
@@ -355,6 +394,9 @@ implements ActionListener, TreeSelectionListener{
 			utils.Utils.saveXML( doc , file);
 			this.dispose();
 			break;
+		case "button-automap":
+			autoMapping();
+			break;
 		default:
 		}
 	}
@@ -363,11 +405,71 @@ implements ActionListener, TreeSelectionListener{
 		
 		JTree select = (JTree) e.getSource();
 		if( select == templateTree )return ;
-		DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) 
+		MyTreeNode treeNode = (MyTreeNode) 
 				select.getLastSelectedPathComponent();
 		if( null == treeNode )return ;
-		markMappedNode(treeNode);
-		markMapItem( treeNode );
+		clearMapMarker();
+		clearSynonymsMaker();
+		MyTreeNode maped = getMapNode(treeNode);
+		if( null != maped ){
+			markMappedNode( maped );
+			markMapItem( treeNode );
+		}else{
+			findSynonyms(treeNode);
+		}
+		
 		templateTree.updateUI();
+	}
+	
+	private void autoMapping( ){
+	
+		for( int s = 0; s < sleaves.size(); s++ ){
+			for( int p = 0; p < pleaves.size(); p++ ){
+				Element selement = (Element) sleaves.get(s).getUserObject();
+				if( !selement.getAttribute("mapping").equals("") ){
+					continue;
+				}
+				if( match( sleaves.get(s), pleaves.get(p)) ){
+					addMapItem( sleaves.get(s), "=", pleaves.get(p) );
+				}
+			} 
+		}
+	}
+	private void findSynonyms( MyTreeNode snode ){
+		Element element = (Element) snode.getUserObject();
+		String name = element.getAttribute("name");
+		List<String> synonyms = Synonyms.get( name );
+		int i = 0;
+		while( i < synonyms.size() ){
+			MyTreeNode node = 
+					getFieldByName(pleaves, synonyms.get(i));
+			if( null == node ){
+				synonyms.remove(i);
+			}else{
+				templateTree.scrollPathToVisible( new TreePath( node.getPath() ) );
+				node.setSynonyms(true);
+				synonymsNode.add(node);
+				System.out.println( name + " sy: " + synonyms.get(i));
+				i++;
+			}
+		}
+	}
+	private boolean match( MyTreeNode snode, MyTreeNode pnode ){
+		Element selement = (Element) snode.getUserObject();
+		Element pelement = (Element) pnode.getUserObject();
+		String sname = selement.getAttribute("name");
+		String pname = pelement.getAttribute("name");
+		if( sname.equals("") )return false;
+		return sname.trim().equals(pname.trim());
+	}
+	private MyTreeNode getFieldByName( List<MyTreeNode> list, String name ){
+		
+		for( MyTreeNode node: list ){
+			Element element = (Element) node.getUserObject();
+			if( element.getAttribute("name").equals(name.trim())){
+				return node;
+			}
+		}
+		return null;
 	}
 }
