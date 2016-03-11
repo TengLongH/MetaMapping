@@ -13,7 +13,6 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -21,7 +20,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.UUID;
 import java.util.Vector;
 
@@ -157,7 +155,9 @@ implements ActionListener, TableModelListener, MouseListener, WindowListener{
 		
 		openExcel();
 
+		setUndecorated(true); 
 		setCurrentPath(null);
+		
 	}
 
 	
@@ -474,8 +474,7 @@ implements ActionListener, TableModelListener, MouseListener, WindowListener{
 			String title = readTableValue("title");
 			String unit = readTableValue("unit");
 			try {
-				DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) curPath.getLastPathComponent();
-				treeNode.removeAllChildren();
+				removeAllChild( (MyTreeNode)curPath.getLastPathComponent() );
 				readTitle(sheetName, Integer.parseInt(title), Integer.parseInt(unit));
 			} catch (Exception e1) {
 				JOptionPane.showMessageDialog(null, e1.getMessage());
@@ -489,6 +488,16 @@ implements ActionListener, TableModelListener, MouseListener, WindowListener{
 		tree.updateUI();
 	}
 
+
+	private void removeAllChild(MyTreeNode lastPathComponent) {
+		lastPathComponent.removeAllChildren();
+		Element element = (Element) lastPathComponent.getUserObject();
+	
+		while( element.getChildNodes().getLength() > 0 ){
+			Node child = element.getChildNodes().item(0);
+			element.removeChild(child);
+		}
+	}
 
 	private File saveXMLFile(){
 		DefaultMutableTreeNode treeRoot = (DefaultMutableTreeNode) tree.getModel().getRoot();

@@ -2,10 +2,12 @@ package utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
 
 import javax.swing.JOptionPane;
 import javax.xml.parsers.DocumentBuilder;
@@ -32,6 +34,8 @@ public class Utils {
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			Document doc = builder.parse(new File("tree/sys/templateTree.xml"));
 			Element book = doc.getDocumentElement();
+			
+			
 			//Element e = getChildElementByName(book, "SampleNo");
 			Element e = getChildElementByName(book, "MicroElement");
 			Element s = getElementByPath(e, new String[]{"SampleNo"});
@@ -41,35 +45,6 @@ public class Utils {
 		}
 		
 	}
-	
-	public static List<MyTreeNode> getLeafs( MyTreeNode root ){
-		List<MyTreeNode> leaves = new ArrayList<MyTreeNode>();
-		List<MyTreeNode> branches = new ArrayList<MyTreeNode>();
-		branches.add(root);
-		while( !branches.isEmpty() ){
-			MyTreeNode b = branches.remove(0);
-			for( int i = 0; i < b.getChildCount(); i++ ){
-				MyTreeNode node = (MyTreeNode) b.getChildAt(i);
-				if( node.isLeaf() ){
-					leaves.add( node );
-				}else{
-					branches.add( node );
-				}
-			}
-		}
-		
-		return leaves;
-	}
-	
-	public static String getFileName( String name ){
-		try{
-			int index = name.lastIndexOf('.');
-			return name.substring(0, index);
-		}catch( Exception e){
-			return "";
-		}
-	}
-	
 	public static String getCellStringValue( Cell cell ){
 		if( null == cell )return null;
 		switch( cell.getCellType() ){
@@ -116,23 +91,22 @@ public class Utils {
 		}
 		return null;
 	}
-	
-	public static File saveXML(Document doc, String defName ) {
+	public static File saveXML(Document doc, String defname ) {
 		File file = null;
 		int value = 0;
 		boolean cancel = false;
 		String name = null;
 		StringBuffer fileName = new StringBuffer();
-		String message = Lang.get("message1");
+		String message = "please input the file name";
 		while( !cancel ){
 			fileName.delete(0, fileName.length());
-			name = JOptionPane.showInputDialog( message, defName );
+			name = JOptionPane.showInputDialog( message );
 			if( null == name ){
 				cancel = true;
 				break;
 			}
 			if( name.startsWith("#") ){
-				message = Lang.get("message2");
+				message = name + " is unvalidate please input again";
 				continue;
 			}
 			fileName.append("tree");
@@ -144,7 +118,7 @@ public class Utils {
 			file = new File( fileName.toString() );
 			if( file.exists() ){
 				value = JOptionPane.showConfirmDialog(null, 
-					Lang.get("message3"),
+					name + " has exists do you want to replace it?",
 					"Confirm", JOptionPane.YES_NO_OPTION);
 				if( JOptionPane.YES_OPTION == value )break;
 			}else{
@@ -152,7 +126,7 @@ public class Utils {
 					file.createNewFile();
 					break;
 				} catch (IOException e) {
-					message = Lang.get("message2");
+					message = name + " is unvalidate please input again";
 					continue;
 				}
 			}
@@ -243,5 +217,30 @@ public class Utils {
 		}
 		buf.deleteCharAt( buf.length() - 1 );
 		return buf.toString();
+	}
+	public static List<MyTreeNode> getLeafs(MyTreeNode root) {
+		
+		MyTreeNode node = null;
+		List<MyTreeNode> leaves = new ArrayList<MyTreeNode>();
+		Queue<MyTreeNode> branches = new ArrayDeque<MyTreeNode>();
+		
+		branches.add(root);
+		
+		while( !branches.isEmpty() ){
+			node = branches.poll();
+			for( int i = 0; i < node.getChildCount(); i++ ){
+				if( node.getChildAt(i).isLeaf() ){
+					leaves.add((MyTreeNode) node.getChildAt(i));
+				}else{
+					branches.offer((MyTreeNode) node.getChildAt(i));
+				}
+			}
+		}
+		return leaves;
+	}
+	public static String getFileName(String name) {
+		int index = name.lastIndexOf('.');
+		index = index < 0 ? 0 : index;
+		return name.substring(0, index);
 	}
 }

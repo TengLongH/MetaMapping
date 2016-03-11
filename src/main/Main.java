@@ -106,6 +106,7 @@ public class Main extends JFrame implements ActionListener, Watcher{
 		add( xmlPanel );
 		add( buttonPanel );
 		
+		this.setIconImage(null);
 		
 		pack();
 		setLocationRelativeTo(null);

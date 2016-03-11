@@ -17,6 +17,8 @@ public class Template {
 	private static int sampleNo;
 	private static int sampleType;
 	private static int stationNo;
+	private static int extraPath;
+	
 	static{
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -34,7 +36,8 @@ public class Template {
 			column = utils.Utils.getChildElementByName(
 					descript, "SampleType");
 			sampleType = Integer.parseInt(column.getAttribute("colum") );
-			
+			String path = get(new Object[]{"ExtraSheet","Path"}, "colum" );
+			extraPath = Integer.parseInt(path);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -68,5 +71,8 @@ public class Template {
 		return descriptRow;
 	}
 	
+	public static int getExtraPath(){
+		return extraPath;
+	}
 	
 }

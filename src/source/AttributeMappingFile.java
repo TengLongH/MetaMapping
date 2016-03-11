@@ -69,7 +69,7 @@ implements ActionListener, TreeSelectionListener{
 	private MyButton autoMapBtn;
 	
  	public AttributeMappingFile( File file){
-		super("Metadata Mapping");
+		super("Mapping Tool");
 		//setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		this.setLayout( new GridBagLayout() );
 		this.file = file;
@@ -124,12 +124,13 @@ implements ActionListener, TreeSelectionListener{
 		btnPanel.add( equalBtn,     new GridBagConstraints( 0, 40, 100, 1, 1, 1,
 				GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 10, 0),
 				0 , 0 ));
-//		btnPanel.add( smallBtn,     new GridBagConstraints( 0, 50, 100, 1, 1, 1,
-//				GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 10, 0),
-//				0 , 0 ));
-//		btnPanel.add( bigBtn,     new GridBagConstraints( 0, 60, 100, 1, 1, 1,
-//				GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 10, 0),
-//				0 , 0 ));
+		btnPanel.add( smallBtn,     new GridBagConstraints( 0, 50, 100, 1, 1, 1,
+				GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 10, 0),
+				0 , 0 ));
+		btnPanel.add( bigBtn,     new GridBagConstraints( 0, 60, 100, 1, 1, 1,
+				GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 10, 0),
+				0 , 0 ));
+		
 		btnPanel.add( new JPanel(), new GridBagConstraints( 0, 70, 100, 30, 1, 1,
 				GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0),
 				0 , 0 ));
@@ -195,6 +196,8 @@ implements ActionListener, TreeSelectionListener{
 		pleaves = utils.Utils.getLeafs( root );
 		root = (MyTreeNode) sourceTree.getModel().getRoot();
 		sleaves = utils.Utils.getLeafs( root );
+		
+		this.setIconImage(null);
 		
 	}
 	private void initMapList() {
@@ -290,15 +293,28 @@ implements ActionListener, TreeSelectionListener{
 	private void addMapItem(String relation){
 		MyTreeNode s= (MyTreeNode) sourceTree.getLastSelectedPathComponent();
 		MyTreeNode t= (MyTreeNode) templateTree.getLastSelectedPathComponent();
-		addMapItem( s, relation, t );
+		try {
+			addMapItem( s, relation, t );
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, e.getMessage());
+		}
 	}
-	private void addMapItem( MyTreeNode s, String relation, MyTreeNode t){
-		if( checkMapping( s, t ) ){
+	private void addMapItem( MyTreeNode s, String relation, MyTreeNode t) throws Exception{
+		
 			FieldMapping m = new FieldMapping( s , relation, t );
 			Element keyEle = (Element) s.getUserObject();
 			Element valEle = (Element) t.getUserObject();
 			String keyName = keyEle.getAttribute("name");
 			String valName = valEle.getAttribute("name");
+			
+			if( !checkMapping( s, t ) ){
+				StringBuffer buf = new StringBuffer();
+				buf.append( valName );
+				buf.append(" ");
+				buf.append(Lang.get("message4"));
+				throw new Exception(buf.toString());
+			}
+			
 			if( !keyName.equals(valName) ){
 				Synonyms.add(keyName, valName);
 			}
@@ -312,9 +328,7 @@ implements ActionListener, TreeSelectionListener{
 			model.addElement( m );
 			mapList.setSelectedIndex(model.size()-1);
 			mapList.ensureIndexIsVisible(model.size()-1);
-		}else{
-			JOptionPane.showMessageDialog(null, "fubidden mapping");
-		}
+		
 	}
 	//不允许同一张Sheet里的两列对应到同一列，extraColumn除外
 	private boolean checkMapping( MyTreeNode key, MyTreeNode value ) {
@@ -430,7 +444,13 @@ implements ActionListener, TreeSelectionListener{
 					continue;
 				}
 				if( match( sleaves.get(s), pleaves.get(p)) ){
-					addMapItem( sleaves.get(s), "=", pleaves.get(p) );
+					try {
+						addMapItem( sleaves.get(s), "=", pleaves.get(p) );
+					} catch (Exception e) {
+						System.err.printf("%s:%s\n", 
+								Lang.get("button-automap"),
+								e.getMessage());
+					}
 				}
 			} 
 		}

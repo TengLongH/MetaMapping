@@ -33,31 +33,31 @@ public class Transport {
 	private Workbook templateBook;
 	private Element sourceRoot;
 
-	private String preSheetName;
-	private Row curRow;
-
-	private List<Integer> testInfo = new ArrayList<Integer>();
-	private List<ColumnMapping> map = new ArrayList<ColumnMapping>() ;
+	private List<List<ColumnMapping>> maps = new ArrayList<List<ColumnMapping>>();
+	private List<ColumnMapping> testInfo = new ArrayList<ColumnMapping>();
+	private List<ColumnMapping> descript = new ArrayList<ColumnMapping>();
 
 	public Transport(File source, File descript) {
 		try {
 			String name = "Transport.xls";
 			name += source.getName().endsWith("xls") ? "" : "x";
-			Path temp = Paths.get("tree", "sys", name );
-			if( Files.exists(temp) )Files.delete(temp);
-			Files.copy( new FileInputStream(source), temp );
+			Path temp = Paths.get("tree", "sys", name);
+			if (Files.exists(temp))
+				Files.delete(temp);
+			Files.copy(new FileInputStream(source), temp);
 			Path plate = Paths.get("tree", "sys", "template.xlsx");
-			Path result = Paths.get( "tree", "sys","result.xlsx") ;
-			if( Files.exists(result) )Files.delete(result);
-			Files.copy(plate, result );
-			
-			templateBook = WorkbookFactory.create( result.toFile() );
-			sourceBook = WorkbookFactory.create( temp.toFile() );
+			Path result = Paths.get("tree", "sys", "result.xlsx");
+			if (Files.exists(result))
+				Files.delete(result);
+			Files.copy(plate, result);
+
+			templateBook = WorkbookFactory.create(result.toFile());
+			sourceBook = WorkbookFactory.create(temp.toFile());
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			sourceRoot = builder.parse(descript).getDocumentElement();
 			transformBook();
-			FileOutputStream fos = new FileOutputStream( new File("result.xlsx") );
+			FileOutputStream fos = new FileOutputStream(new File("result.xlsx"));
 			templateBook.write(fos);
 			templateBook.close();
 			fos.close();
@@ -85,125 +85,186 @@ public class Transport {
 
 	private void transformSheet(Sheet sheet, Element xmlSheet) {
 
-		int stationNo = -1, sampleType = -1, startRow = -1;
+		int startRow = 0;
 		try {
 			// 解析该表和模板文件的对应关系
 			parseSheetMapping(xmlSheet);
-			Collections.sort(map);
-			// 获取样品的站位号和类型
-			for( ColumnMapping cm : map ){
-				if (stationNo >= 0 && sampleType >= 0)
-					break;
-				if( cm.getPlateColumn() == Template.getStationNo() ){
-					stationNo = cm.getSourceColumn();
-				}else if( cm.getPlateColumn() == Template.getSampleType() ){
-					sampleType = cm.getSourceColumn();
-				}
-			}
-			if( stationNo < 0 || sampleType < 0){
-				JOptionPane.showMessageDialog( 
-						null, Lang.get("warning1"),Lang.get("warning"), JOptionPane.WARNING_MESSAGE );
-				return ;
-			}
 			startRow = Integer.parseInt(xmlSheet.getAttribute("data"));
 			for (int i = startRow; i <= sheet.getLastRowNum(); i++) {
-				transformRow(sheet.getRow(i), stationNo, sampleType);
+				Row row = sheet.getRow(i);
+				if (isEmpty(row))
+					continue;
+				transformRow(row);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.printf("Sheet:%s station:%d type:%d row:%d", sheet.getSheetName(), stationNo, sampleType,
-					startRow);
+			System.out.printf("Sheet:%s row:%d", sheet.getSheetName(), startRow);
 		}
 	}
 
-	private void transformRow(Row row, int stationNo, int sampleType ) {
-		String station = null;
-		String type = null;
-		String sampleNo = null;
+	private void transformRow(Row row) {
 
-		Cell cell = null;
+		boolean extra = false;
+		for (List<ColumnMapping> map : maps) {
+			String sheetName = map.get(0).getPlateSheet();
+			extra = sheetName.equals("ExtraSheet");
+			Sheet psheet = templateBook.getSheet(sheetName);
+			Row prow = psheet.createRow(psheet.getLastRowNum() + 1);
+			for (ColumnMapping cm : map) {
+				Cell src = row.getCell(cm.getSourceColumn());
+				Cell des = prow.getCell(cm.getPlateColumn(), Row.CREATE_NULL_AS_BLANK);
+				copyCell(src, des);
+				if( extra ){
+					Cell cell = prow.createCell(Template.getExtraPath());
+					cell.setCellValue( cm.getSourcePath() );
+				}
+			}
+		}
+	}
+
+	private void parseSheetMapping(Element xmlSheet) {
+
+		maps.clear();
+		testInfo.clear();
+		descript.clear();
+		List<ColumnMapping> data = new ArrayList<ColumnMapping>();
+
+		String mapping = null;
+		List<String> path = null;
+		String sheetName = null;
+		int columnIndex = -1, srcIndex = -1;
+		NodeList columns = xmlSheet.getElementsByTagName("field");
 		try {
-			station = row.getCell(stationNo).getStringCellValue().trim();
-			if( station.equals("") )return ;
-			type = row.getCell(sampleType).getStringCellValue().trim();
-			if( type.equals("") )return ;
-			sampleNo = getsampleNo(station, type);
-			for( ColumnMapping m : map ){
-				cell = row.getCell(m.getSourceColumn());
-				transformCell(cell, m , sampleNo);
+			for (int i = 0; i < columns.getLength(); i++) {
+
+				Element column = (Element) columns.item(i);
+				srcIndex = Integer.parseInt(column.getAttribute("colum"));
+				mapping = column.getAttribute("mapping").trim();
+				if (null == mapping || mapping.trim().equals(""))
+					continue;
+
+				mapping = mapping.substring(2).trim();
+				// 获取映射节点的路径
+				path = new ArrayList<String>(Arrays.asList(mapping.split(">")));
+				path.remove(0);
+				sheetName = path.get(0);
+
+				// -------------------------------------
+				// String strColumn = Template.get(path.toArray(), "colum");
+				Element element = Template.getElement(path.toArray());
+				String strColumn = element.getAttribute("colum");
+				String type = element.getAttribute("type");
+
+				// -----------------------------------------------------
+				columnIndex = Integer.parseInt(strColumn);
+
+				// 源数据文件中该列的路径，添加进Extra表时会用到
+				String srcPath = utils.Utils.elementPathToString(column);
+
+				ColumnMapping ncm = new ColumnMapping(srcPath, srcIndex, columnIndex, sheetName, type);
+				if (ncm.getPlateSheet().equals("Description")) {
+					descript.add(ncm);
+					if( ncm.getPlateColumn() == Template.getSampleNo() ){
+						
+						ColumnMapping tcm = new ColumnMapping(
+												ncm.getSourcePath(),
+												ncm.getSourceColumn(),
+												0, "");
+						
+						testInfo.add( tcm );
+					}
+					continue;
+				}
+				
+				if (type.equals("TestInfo")) {
+					testInfo.add(ncm);
+					continue;
+				}
+				data.add(ncm);
 			}
+			// 按照对应列所属的模板表名进行分类
+			Collections.sort(data);
+
+			List<ColumnMapping> temp = new ArrayList<ColumnMapping>();
+			String pre = data.get(0).getPlateSheet();
+			String cur = pre;
+			for (ColumnMapping cm : data) {
+				cur = cm.getPlateSheet();
+				if (!cur.equals(pre)) {
+
+					List<ColumnMapping> info = new ArrayList<ColumnMapping>(testInfo);
+					Collections.copy(info, testInfo);
+					for (int i = 0; i < info.size(); i++) {
+						ColumnMapping infocm = info.get(i);
+						infocm.setPlateSheet(pre);
+						temp.addAll(info);
+					}
+					maps.add(temp);
+					temp = new ArrayList<ColumnMapping>();
+					pre = cur;
+
+				}
+				temp.add(cm);
+			}
+
+			List<ColumnMapping> info = new ArrayList<ColumnMapping>(testInfo);
+			Collections.copy(info, testInfo);
+			for (int i = 0; i < info.size(); i++) {
+				ColumnMapping infocm = info.get(i);
+				infocm.setPlateSheet(pre);
+			}
+
+			temp.addAll(info);
+
+			maps.add(temp);
+			maps.add(descript);
+			
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.printf("Row:%d SampleNo:%s Station:%s Type:%s", row.getRowNum(), sampleNo, station, type);
-		}
-	}
-
-	private void transformCell(Cell srcCell, ColumnMapping m, String sampleNo) {
-
-		if( m.getPlateSheet().equals("ExtraSheet") ){
-			addExtraItem( srcCell, m, sampleNo );
-			preSheetName = m.getPlateSheet();
-			return ;
-		}
-		try {
-			if (!m.getPlateSheet().equals(preSheetName)) {
-				curRow = getRow(m.getPlateSheet(), sampleNo);
-				preSheetName = m.getPlateSheet();
-			}
-			Cell desCell = curRow.getCell(m.getPlateColumn(), Row.CREATE_NULL_AS_BLANK);
-			copyCell(srcCell, desCell);
-		} catch (Exception e) {
+			System.err.printf("%s %s %d", mapping, path, srcIndex);
 			e.printStackTrace();
 		}
 
 	}
+	private boolean isEmpty(Row row) {
+		if (null == row)
+			return true;
+		int column = 0, station = -1, type = -1;
 
-	private void addExtraItem(Cell srcCell, ColumnMapping m, String sampleNo) {
-		Sheet sheet = templateBook.getSheet("ExtraSheet");
-		if( null == sheet )return ;
-		Row row = sheet.createRow(sheet.getLastRowNum() + 1 );
-		Cell cell = row.createCell(0);
-		cell.setCellValue( sampleNo );
-		cell = row.createCell(1);
-		cell.setCellValue(m.getSourcePath());
-		cell = row.createCell(2);
-		copyCell(srcCell, cell);
-	}
-
-	private Row getRow(String sheetName, String sampleNo) {
-		Row row = null;
-		Cell cell = null;
-		
-		Sheet sheet = templateBook.getSheet(sheetName);
-		// get the start data row of sheet and the sampleNo column index
-		String attr = Template.get(new String[] { sheetName }, "data");
-		int startRow = Integer.parseInt(attr);
-		attr = Template.get(new String[] { sheetName, "SampleNo" }, "colum");
-		int index = Integer.parseInt(attr);
-		// search sheet to find the sampleNo
-		for (int i = startRow; i <= sheet.getLastRowNum(); i++) {
-			row = sheet.getRow(i);
-			if (null == row)
-				continue;
-			cell = row.getCell(index);
-			if (null == cell)
-				continue;
-			String value = cell.getStringCellValue();
-			if (value.equals(sampleNo.trim())) {
-				return row;
+		for (ColumnMapping cm : descript) {
+			column = cm.getPlateColumn();
+			if (column == Template.getStationNo()) {
+				station = column;
+			}
+			if (column == Template.getSampleType()) {
+				type = column;
 			}
 		}
-		
-		// if the sampleNo not in sheet, add it
-		int temp = sheet.getLastRowNum()+1;
-		int result = startRow >= temp ? startRow : temp;
-		row = sheet.createRow(result);
-		cell = row.createCell(index);
-		cell.setCellValue(sampleNo);
-		return row;
+		if (station < 0 || type < 0)
+			return true;
+
+		Cell cell = row.getCell(station);
+		if (isEmpty(cell))
+			return true;
+		cell = row.getCell(type);
+		if (isEmpty(cell))
+			return true;
+		return false;
+	}
+
+	private boolean isEmpty(Cell cell) {
+		if (null == cell)
+			return true;
+		if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
+			if (cell.getStringCellValue().trim().equals("")) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void copyCell(Cell cell, Cell desCell) {
+		if( null == cell || null == desCell )return;
+		
 		try {
 			switch (cell.getCellType()) {
 			case Cell.CELL_TYPE_NUMERIC:
@@ -225,100 +286,15 @@ public class Transport {
 				System.err.println("Cell Type is error");
 			}
 		} catch (Exception e) {
+			System.out.printf( "%s:(%d,%d)", 
+					desCell.getSheet().getSheetName(), 
+					desCell.getRowIndex(), 
+					desCell.getColumnIndex());
 			e.printStackTrace();
 		}
 	}
 
-	private void parseSheetMapping(Element xmlSheet) {
-
-		map.clear();
-		testInfo.clear();
-		String mapping = null;
-		List<String> path = null;
-		String sheetName = null;
-		int columnIndex = -1, srcIndex = -1;
-		NodeList columns = xmlSheet.getElementsByTagName("field");
-		try {
-			for (int i = 0; i < columns.getLength(); i++) {
-
-				Element column = (Element) columns.item(i);
-				srcIndex = Integer.parseInt(column.getAttribute("colum"));
-				mapping = column.getAttribute("mapping").trim();
-				if (null == mapping || mapping.trim().equals("") )
-					continue;
-				
-				mapping = mapping.substring(2).trim();
-				//获取映射节点的路径
-				path = new ArrayList<String>(Arrays.asList(mapping.split(">")));
-				path.remove(0);
-				sheetName = path.get(0);
-				
-				//-------------------------------------
-				//String strColumn = Template.get(path.toArray(), "colum");
-				Element element = Template.getElement(path.toArray());
-				String strColumn = element.getAttribute("colum");
-				String type = element.getAttribute("type");
-				
-				//-----------------------------------------------------
-				columnIndex = Integer.parseInt(strColumn);
-				if( type.equals("TestInfo")){
-					testInfo.add(srcIndex );
-				}
-				//源数据文件中该列的路径，添加进Extra表时会用到
-				String srcPath = utils.Utils.elementPathToString(column);
-				map .add( new ColumnMapping(srcPath, srcIndex, columnIndex, sheetName));
-			}
-		} catch (Exception e) {
-			System.err.printf("%s %s %d", mapping, path, srcIndex);
-			e.printStackTrace();
-		}
-
-	}
-
-	private String getsampleNo(String station, String type) {
-		String id = searchSample(station, type);
-		if (null == id) {
-			id = appendSample(station, type);
-		}
-		return id;
-	}
-
-	private String appendSample(String station, String type) {
-		String id = createID();
-		Sheet descript = templateBook.getSheet("Description");
-		int temp = descript.getLastRowNum() + 1 ;
-		int index =  temp >= Template.getDescriptRow() ? temp:Template.getDescriptRow();
-		Row row = descript.createRow(index);
-		Cell cell = row.createCell(Template.getSampleNo());
-		cell.setCellValue(id);
-		return id;
-	}
-
-	private String searchSample(String station, String type) {
-		String s = null, t = null;
-		Sheet sheet = templateBook.getSheet("Description");
-		for (int i = Template.getDescriptRow(); i < sheet.getLastRowNum(); i++) {
-			Row row = sheet.getRow(i);
-			if (null == row)
-				continue;
-			Cell cell = row.getCell(Template.getStationNo());
-			if (null == cell)
-				continue;
-			s = cell.getStringCellValue();
-			cell = row.getCell(Template.getSampleType());
-			if (null == cell)
-				continue;
-			t = cell.getStringCellValue();
-			if (station.equals(s.trim()) && type.equals(t.trim())) {
-				return row.getCell(Template.getSampleNo()).getStringCellValue();
-			}
-		}
-		return null;
-	}
-
-	private String createID() {
-		return java.util.UUID.randomUUID().toString();
-	}
+	
 
 	public void printContent() {
 		try {
@@ -347,7 +323,7 @@ public class Transport {
 	}
 
 	public static void main(String[] args) {
-		//new Transport(new File("tree/major.xlsx"), new File("tree/major.xml"));
+		new Transport(new File("tree/commit.xls"), new File("tree/commit.xml"));
 
 	}
 }
